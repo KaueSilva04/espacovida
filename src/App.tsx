@@ -28,7 +28,15 @@ function AppContent() {
           <Route path="/contato" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/event" element={<Event />} />
-
+          <Route
+            path="*"
+            element={
+              <div className="p-8 text-center">
+                <h1 className="text-2xl font-bold">404 - Página não encontrada</h1>
+                <p>Ops — a página que você procura não existe.</p>
+              </div>
+            }
+          />
         </Routes>
       </main>
       {!hideLayout && <Footer />}
