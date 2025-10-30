@@ -11,8 +11,10 @@ import Login from './pages/Login';
 import Event from './pages/Event';
 
 function AppContent() {
+  const nonLayoutPages = ['/login', '/event']
+
   const location = useLocation();
-  const hideLayout = location.pathname === '/login' || '/event';
+  const hideLayout = nonLayoutPages.includes(location.pathname)
 
   return (
     <div className="flex flex-col min-h-screen">
