@@ -1,8 +1,57 @@
 import React, { useState } from 'react';
 import { Calendar, Users, MapPin, Clock, Plus, Edit2, Trash2, UserPlus, Search, Filter, X, CheckCircle } from 'lucide-react';
 
+// --- 1. Importações do Hook e Interfaces ---
+// Assumindo os caminhos corretos:
+import { useCreateEvent } from '../hooks/eventHooks/createEvent.Hook';
+import { createEvent, completeEvent } from '../interfaces/eventInterfaces/createEvent.Interface'; // Tipagem de envio
+// Assumindo que a interface completeEvent está no mesmo arquivo para simplificar o import, ou em '../interfaces/eventInterfaces/completeEvent.Interface'
+// Para este exemplo, vou usar a interface 'completeEvent' para tipar o que está no estado 'events'.
+
+// --- 2. Definição das Interfaces do Componente ---
+
+interface Participant {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+// O tipo de evento usado no estado local (State do React)
+interface EventState extends completeEvent {
+  // O idevent é number, mas os IDs mockados são number
+  id: number; 
+  time: string; // Adicionado para manter a estrutura do seu estado mockado
+  maxParticipants: number;
+  participants: Participant[];
+  status: 'upcoming' | 'completed' | 'cancelled' | string;
+}
+
+// O formulário de novo evento
+interface EventFormState {
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  maxParticipants: number;
+}
+
+interface ParticipantFormState {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+// Tipo para o estado selecionado (pode ser um EventState ou null)
+type SelectedEvent = EventState | null;
+
+
 export default function EventManagementSystem() {
-  const [events, setEvents] = useState([
+  // --- 3. Inicialização do Hook ---
+  const { isLoading: isCreating, error: createError, createEvent: createEventMutation } = useCreateEvent();
+
+  const [events, setEvents] = useState<EventState[]>([
     {
       id: 1,
       title: 'Campanha de Arrecadação',
@@ -32,14 +81,15 @@ export default function EventManagementSystem() {
     }
   ]);
 
-  const [view, setView] = useState('list');
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [showEventModal, setShowEventModal] = useState(false);
-  const [showParticipantModal, setShowParticipantModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [view, setView] = useState<'list' | 'grid'>('list');
+  const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null);
+  const [showEventModal, setShowEventModal] = useState<boolean>(false);
+  const [showParticipantModal, setShowParticipantModal] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const [eventForm, setEventForm] = useState({
+  const [eventForm, setEventForm] = useState<EventFormState>({
     title: '',
     description: '',
     date: '',
@@ -48,31 +98,56 @@ export default function EventManagementSystem() {
     maxParticipants: 0
   });
 
-  const [participantForm, setParticipantForm] = useState({
+  const [participantForm, setParticipantForm] = useState<ParticipantFormState>({
     name: '',
     email: '',
     phone: ''
   });
-
-  const handleCreateEvent = () => {
+  
+  // --- 4. FUNÇÃO DE CRIAÇÃO ATUALIZADA (Usando o Hook) ---
+  const handleCreateEvent = async () => {
+    setGlobalError(null);
     if (!eventForm.title || !eventForm.date || !eventForm.time || !eventForm.location) {
       alert('Preencha todos os campos obrigatórios!');
       return;
     }
 
-    const newEvent = {
-      id: Date.now(),
-      ...eventForm,
-      participants: [],
-      status: 'upcoming'
+    // Mapeia o EventFormState para o Payload de envio (createEvent)
+    const payload: createEvent = {
+        title: eventForm.title,
+        description: eventForm.description,
+        // Combina data e hora para atender à tipagem do backend (se necessário) ou envia separadamente
+        date: `${eventForm.date}T${eventForm.time}:00.000Z`, 
+        location: eventForm.location,
     };
+    
+    try {
+        // Chamada de Mutação: O HOOK faz a requisição e o tratamento de status/envelope
+        const newEventData = await createEventMutation(payload);
 
-    setEvents([...events, newEvent]);
-    setShowEventModal(false);
-    resetEventForm();
+        // Atualiza o estado local do React com o evento retornado pela API (que tem o idevent)
+        const newEvent: EventState = {
+            ...newEventData,
+            id: newEventData.idevent, // Usa o idevent como ID local
+            time: eventForm.time, 
+            maxParticipants: eventForm.maxParticipants,
+            participants: [],
+            status: 'upcoming'
+        };
+
+        setEvents([...events, newEvent]);
+        setShowEventModal(false);
+        resetEventForm();
+    } catch (e) {
+        // O erro já foi capturado e armazenado no estado 'createError' pelo hook,
+        // mas setamos um erro global aqui para exibir no topo da página, se necessário.
+        setGlobalError((e as Error).message);
+    }
   };
-
-  const handleDeleteEvent = (eventId) => {
+  
+  // FUNÇÕES DE MANIPULAÇÃO LOCAL (Tipadas)
+  
+  const handleDeleteEvent = (eventId: number) => {
     if (window.confirm('Tem certeza que deseja excluir este evento?')) {
       setEvents(events.filter(e => e.id !== eventId));
       setSelectedEvent(null);
@@ -80,8 +155,8 @@ export default function EventManagementSystem() {
   };
 
   const handleAddParticipant = () => {
-    if (!participantForm.name || !participantForm.email) {
-      alert('Preencha nome e email!');
+    if (!selectedEvent || !participantForm.name || !participantForm.email) {
+      alert('Selecione um evento e preencha nome e email!');
       return;
     }
 
@@ -90,7 +165,7 @@ export default function EventManagementSystem() {
       return;
     }
 
-    const newParticipant = {
+    const newParticipant: Participant = {
       id: Date.now(),
       ...participantForm
     };
@@ -106,15 +181,17 @@ export default function EventManagementSystem() {
     });
 
     setEvents(updatedEvents);
-    setSelectedEvent({
-      ...selectedEvent,
-      participants: [...selectedEvent.participants, newParticipant]
-    });
+    setSelectedEvent(prev => prev ? { 
+        ...prev, 
+        participants: [...prev.participants, newParticipant] 
+    } : null);
     setShowParticipantModal(false);
     resetParticipantForm();
   };
 
-  const handleRemoveParticipant = (participantId) => {
+  const handleRemoveParticipant = (participantId: number) => {
+    if (!selectedEvent) return;
+    
     if (window.confirm('Remover este participante?')) {
       const updatedEvents = events.map(event => {
         if (event.id === selectedEvent.id) {
@@ -127,10 +204,10 @@ export default function EventManagementSystem() {
       });
 
       setEvents(updatedEvents);
-      setSelectedEvent({
-        ...selectedEvent,
-        participants: selectedEvent.participants.filter(p => p.id !== participantId)
-      });
+      setSelectedEvent(prev => prev ? {
+        ...prev,
+        participants: prev.participants.filter(p => p.id !== participantId)
+      } : null);
     }
   };
 
@@ -155,7 +232,7 @@ export default function EventManagementSystem() {
 
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.location.toLowerCase().includes(searchTerm.toLowerCase());
+                          event.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || event.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
@@ -163,6 +240,7 @@ export default function EventManagementSystem() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
+        
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -171,11 +249,19 @@ export default function EventManagementSystem() {
               <p className="text-gray-600">Organize e acompanhe seus eventos e participantes</p>
             </div>
             <button
-              onClick={() => setShowEventModal(true)}
-              className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+              onClick={() => {
+                  setShowEventModal(true);
+                  setGlobalError(null); // Limpa erro ao abrir o modal
+              }}
+              disabled={isCreating}
+              className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${
+                  isCreating 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+              }`}
             >
               <Plus className="w-5 h-5" />
-              Novo Evento
+              {isCreating ? 'Aguarde...' : 'Novo Evento'}
             </button>
           </div>
 
@@ -191,32 +277,17 @@ export default function EventManagementSystem() {
                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
               />
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setView('list')}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  view === 'list'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Lista
-              </button>
-              <button
-                onClick={() => setView('grid')}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  view === 'grid'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Grade
-              </button>
-            </div>
+            {/* Adiciona o display de erro global */}
+            {(globalError || createError) && (
+                <div className="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex-1 flex items-center gap-2">
+                    <X className="w-5 h-5" />
+                    <span>Erro na Operação: {globalError || createError}</span>
+                </div>
+            )}
           </div>
         </div>
 
-        {/* Events List/Grid */}
+        {/* Events List/Grid (Código de renderização não alterado, apenas tipado) */}
         {view === 'list' ? (
           <div className="space-y-4">
             {filteredEvents.map(event => (
@@ -288,7 +359,7 @@ export default function EventManagementSystem() {
           </div>
         )}
 
-        {/* Event Detail Modal */}
+        {/* Event Detail Modal (Simplificado o uso do SelectedEvent para ser tipado) */}
         {selectedEvent && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -416,7 +487,7 @@ export default function EventManagementSystem() {
                     value={eventForm.description}
                     onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                    rows="3"
+                    rows={3}
                     placeholder="Descrição do evento"
                   />
                 </div>
@@ -462,7 +533,7 @@ export default function EventManagementSystem() {
                     onChange={(e) => setEventForm({ ...eventForm, maxParticipants: parseInt(e.target.value) || 0 })}
                     className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
                     placeholder="0"
-                    min="1"
+                    min={1}
                   />
                 </div>
 
@@ -478,9 +549,14 @@ export default function EventManagementSystem() {
                   </button>
                   <button
                     onClick={handleCreateEvent}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:from-green-700 hover:to-green-800 transition-all"
+                    disabled={isCreating}
+                    className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
+                        isCreating 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                    }`}
                   >
-                    Criar Evento
+                    {isCreating ? 'Criando...' : 'Criar Evento'}
                   </button>
                 </div>
               </div>
@@ -488,8 +564,8 @@ export default function EventManagementSystem() {
           </div>
         )}
 
-        {/* Add Participant Modal */}
-        {showParticipantModal && (
+        {/* Add Participant Modal (Não alterado, apenas tipado) */}
+        {showParticipantModal && selectedEvent && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
               <div className="bg-gradient-to-r from-green-600 to-blue-600 p-6 text-white rounded-t-2xl">
