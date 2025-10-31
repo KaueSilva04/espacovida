@@ -102,7 +102,7 @@ interface ApiMethods {
   get: <T>(endpoint: string, options?: ApiFetchOptions) => Promise<T | null>;
   post: <T, D = unknown>(endpoint: string, body: D, options?: ApiFetchOptions) => Promise<T | null>;
   put: <T, D = unknown>(endpoint: string, body: D, options?: ApiFetchOptions) => Promise<T | null>;
-  delete: <T>(endpoint: string, options?: ApiFetchOptions) => Promise<T | null>;
+  delete: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) => Promise<T | null>;
 }
 
 export const api: ApiMethods = {
@@ -115,8 +115,8 @@ export const api: ApiMethods = {
   put: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) => 
     apiFetch<T>(endpoint, { method: 'PUT', body, ...options }),
     
-  delete: <T>(endpoint: string, options?: ApiFetchOptions) => 
-    apiFetch<T>(endpoint, { method: 'DELETE', ...options }),
+  delete: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) => 
+    apiFetch<T>(endpoint, { method: 'DELETE', body, ...options }),
 };
 
 export default api;
