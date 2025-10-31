@@ -11,6 +11,11 @@ import { useGetAllEvent } from '../hooks/eventHooks/getAllEvent.Hook';
 import { createEvent, completeEvent } from '../interfaces/eventInterfaces/createEvent.Interface'; // Tipagem de envio
 // completeEvent é usada como tipagem base
 
+// NOVO: Importação do hook de participante
+import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook'; // <-- Assumindo este caminho correto
+// NOVO: Importação da interface newParticipant (para enviar à API)
+import { newParticipant as NewParticipantInterface } from '../interfaces/participantInterfaces/newParticipant.Interface';
+
 // --- 2. Definição das Interfaces do Componente ---
 
 interface Participant {
@@ -45,6 +50,8 @@ interface ParticipantFormState {
     name: string;
     email: string;
     phone: string;
+    // Adicionado idEvent para facilitar o envio à API no hook
+    idEvent: number | null; 
 }
 
 // Tipo para o estado selecionado (pode ser um EventState ou null)
@@ -69,6 +76,13 @@ export default function EventManagementSystem() {
         isLoading: isFetching, 
         error: fetchError 
     } = useGetAllEvent();
+    
+    // NOVO: INICIALIZAÇÃO DO HOOK DE ADIÇÃO DE PARTICIPANTE
+    const { 
+        createParticipant: createParticipantMutation, 
+        loading: isAddingParticipant, 
+        error: addParticipantError 
+    } = useNewParticipant();
     // ------------------------------------
 
     // A lista de eventos agora começa vazia e será preenchida pelo useEffect/Hook.
@@ -132,7 +146,8 @@ export default function EventManagementSystem() {
     const [participantForm, setParticipantForm] = useState<ParticipantFormState>({
         name: '',
         email: '',
-        phone: ''
+        phone: '',
+        idEvent: null // NOVO: Campo para vincular o participante ao evento
     });
     
     // --- FUNÇÃO DE CRIAÇÃO (Inclusão de evento na lista local após sucesso da API) ---
@@ -211,44 +226,91 @@ export default function EventManagementSystem() {
     };
     // -------------------------------------------
 
-    const handleAddParticipant = () => {
-        if (!selectedEvent || !participantForm.name || !participantForm.email) {
-            alert('Selecione um evento e preencha nome e email!');
+    // NOVO: Função para abrir o modal de participante e setar o idEvent
+    const openAddParticipantModal = (event: EventState) => {
+        setGlobalError(null); // Limpa erros globais antes de abrir
+        setParticipantForm(prev => ({
+            ...prev,
+            idEvent: event.id // Define o ID do evento para onde o participante será adicionado
+        }));
+        setSelectedEvent(event); // Garante que o evento selecionado está correto
+        setShowParticipantModal(true);
+    };
+    
+    // FUNÇÃO DE ADIÇÃO DE PARTICIPANTE (AGORA CHAMA O HOOK/API)
+    const handleAddParticipant = async () => {
+        setGlobalError(null); // Limpa erros anteriores
+        if (!selectedEvent || !participantForm.name || !participantForm.email || participantForm.idEvent === null) {
+            setGlobalError('Selecione um evento e preencha nome e email!');
             return;
         }
 
         if (selectedEvent.participants.length >= selectedEvent.maxParticipants) {
-            alert('Evento já atingiu o número máximo de participantes!');
+            setGlobalError('Evento já atingiu o número máximo de participantes!');
             return;
         }
 
-        const newParticipant: Participant = {
-            id: Date.now(),
-            ...participantForm
+        // Prepara o payload para a API
+        const payload: NewParticipantInterface = {
+            name: participantForm.name,
+            email: participantForm.email,
+            phone: participantForm.phone,
+            idEvent: participantForm.idEvent
         };
 
-        const updatedEvents = events.map(event => {
-            if (event.id === selectedEvent.id) {
-                return {
-                    ...event,
-                    participants: [...event.participants, newParticipant]
-                };
-            }
-            return event;
-        });
+        try {
+            // CHAMA A API PARA CRIAR O PARTICIPANTE
+            const newParticipantData = await createParticipantMutation(payload);
 
-        setEvents(updatedEvents);
-        setSelectedEvent(prev => prev ? { 
-            ...prev, 
-            participants: [...prev.participants, newParticipant] 
-        } : null);
-        setShowParticipantModal(false);
-        resetParticipantForm();
+            if (!newParticipantData) {
+                 // O erro é lançado no hook, mas como ele retorna null em caso de erro, 
+                 // e o erro é setado no state 'addParticipantError', podemos checá-lo.
+                 // Caso a promessa seja rejeitada, o catch é executado, mas a verificação é um bom fallback
+                setGlobalError(addParticipantError || 'Falha desconhecida ao adicionar participante.');
+                return;
+            }
+
+            // O retorno da API (newParticipantData) deve ser um 'returnParticipant' com um ID.
+            const newParticipant: Participant = {
+                id: newParticipantData.idParticipant, // Assumindo que o ID do participante retornado se chama idParticipant
+                name: newParticipantData.name,
+                email: newParticipantData.email,
+                phone: newParticipantData.phone,
+            };
+            
+            // 1. Atualiza a lista principal de eventos
+            const updatedEvents = events.map(event => {
+                if (event.id === selectedEvent.id) {
+                    return {
+                        ...event,
+                        participants: [...event.participants, newParticipant]
+                    };
+                }
+                return event;
+            });
+
+            setEvents(updatedEvents);
+            
+            // 2. Atualiza o evento selecionado (para o modal de detalhes)
+            setSelectedEvent(prev => prev ? { 
+                ...prev, 
+                participants: [...prev.participants, newParticipant] 
+            } : null);
+            
+            // 3. Fecha o modal e limpa o formulário
+            setShowParticipantModal(false);
+            resetParticipantForm();
+
+        } catch (e) {
+            // Se houver erro, exibe o erro retornado pelo hook
+            setGlobalError(addParticipantError || (e instanceof Error ? e.message : 'Um erro ocorreu ao adicionar o participante.'));
+        }
     };
 
     const handleRemoveParticipant = (participantId: number) => {
         if (!selectedEvent) return;
         
+        // Mantido o código original para remoção local, já que não há serviço de remoção fornecido.
         if (window.confirm('Remover este participante?')) {
             const updatedEvents = events.map(event => {
                 if (event.id === selectedEvent.id) {
@@ -283,20 +345,21 @@ export default function EventManagementSystem() {
         setParticipantForm({
             name: '',
             email: '',
-            phone: ''
+            phone: '',
+            idEvent: null // Limpa o ID do evento também
         });
     };
 
     const filteredEvents = events.filter(event => {
         const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            event.location.toLowerCase().includes(searchTerm.toLowerCase());
+                             event.location.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesFilter = filterStatus === 'all' || event.status === filterStatus;
         return matchesSearch && matchesFilter;
     });
     
     // Determina qual erro exibir globalmente
-    // Prioriza erros de fetch/delete/create sobre o erro geral
-    const currentGlobalError = fetchError || deleteError || createError || globalError;
+    // NOVO: Adicionado addParticipantError
+    const currentGlobalError = fetchError || deleteError || createError || addParticipantError || globalError;
 
     // Se estiver buscando e não houver dados, exibe carregamento.
     const showLoading = isFetching && events.length === 0;
@@ -493,7 +556,7 @@ export default function EventManagementSystem() {
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="text-xl font-bold text-gray-800">Lista de Participantes</h3>
                                     <button
-                                        onClick={() => setShowParticipantModal(true)}
+                                        onClick={() => openAddParticipantModal(selectedEvent)} // CHAMA A NOVA FUNÇÃO
                                         className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:from-green-700 hover:to-green-800 transition-all flex items-center gap-2"
                                     >
                                         <UserPlus className="w-4 h-4" />
@@ -686,7 +749,7 @@ export default function EventManagementSystem() {
                     </div>
                 )}
 
-                {/* Add Participant Modal (Não alterado, apenas tipado) */}
+                {/* Add Participant Modal (Atualizado com lógica de API) */}
                 {showParticipantModal && selectedEvent && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
@@ -706,6 +769,14 @@ export default function EventManagementSystem() {
                             </div>
 
                             <div className="p-6 space-y-4">
+                                {/* NOVO: Exibe erro de adição de participante */}
+                                {addParticipantError && (
+                                    <div className="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
+                                        <X className="w-5 h-5" />
+                                        <span>Erro: {addParticipantError}</span>
+                                    </div>
+                                )}
+                                
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
                                     <input
@@ -745,15 +816,21 @@ export default function EventManagementSystem() {
                                             setShowParticipantModal(false);
                                             resetParticipantForm();
                                         }}
+                                        disabled={isAddingParticipant}
                                         className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         onClick={handleAddParticipant}
-                                        className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:from-green-700 hover:to-green-800 transition-all"
+                                        disabled={isAddingParticipant}
+                                        className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
+                                            isAddingParticipant
+                                                ? 'bg-gray-400 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                        }`}
                                     >
-                                        Adicionar
+                                        {isAddingParticipant ? 'Adicionando...' : 'Adicionar'}
                                     </button>
                                 </div>
                             </div>
