@@ -3,7 +3,7 @@ interface IEvent {
     title: string;
 }
 
-export interface returnParticipant {
+export interface ParticipantWithEvent {
     idparticipant: number;
     name: string;
     email: string;
@@ -12,4 +12,4 @@ export interface returnParticipant {
     event: IEvent;
 }
 
-export default returnParticipant
+export default ParticipantWithEvent

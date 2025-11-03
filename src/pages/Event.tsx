@@ -5,20 +5,16 @@ import ModalComponent from '../components/Modal';
 import { useCreateEvent } from '../hooks/eventHooks/createEvent.Hook';
 import { useDeleteEvent } from '../hooks/eventHooks/deleteEvent.Hook';
 import { useGetAllEvent } from '../hooks/eventHooks/getAllEvent.Hook';
+import { useGetAllParticipantByEvent } from '../hooks/eventHooks/getAllParticipantsByEvent.hook';
 import { createEvent } from '../interfaces/eventInterfaces/createEvent.Interface';
 import { completeEvent } from '../interfaces/eventInterfaces/completeEvent.Interface'
 import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook';
 import { newParticipant as NewParticipantInterface } from '../interfaces/participantInterfaces/newParticipant.Interface';
 import EventComponent from '../components/EventPageModals/EventComponent';
+import completeParticipant from '../interfaces/participantInterfaces/completeParticipant.Interface';
+import { getAllParticipantsByEventService } from '../services/eventServices/getAllParticipantsByEvent.Service';
 
 // --- 2. Definição das Interfaces do Componente ---
-interface Participant {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-}
-
 interface EventState extends completeEvent {
     // O idevent é number, mas os IDs mockados são number
     id: number;
@@ -26,7 +22,7 @@ interface EventState extends completeEvent {
     description: string
     time: string; // Adicionado para manter a estrutura do seu estado mockado
     maxParticipants: number;
-    participants: Participant[];
+    participants: completeParticipant[];
     status: 'upcoming' | 'completed' | 'cancelled' | string;
     date: string;
     location: string
@@ -72,12 +68,19 @@ export default function EventManagementSystem() {
         error: fetchError
     } = useGetAllEvent();
 
-    // NOVO: INICIALIZAÇÃO DO HOOK DE ADIÇÃO DE PARTICIPANTE
+    // INICIALIZAÇÃO DO HOOK DE ADIÇÃO DE PARTICIPANTE
     const {
         createParticipant: createParticipantMutation,
         loading: isAddingParticipant,
         error: addParticipantError
     } = useNewParticipant();
+
+    // INICIALIZAÇÃO DO HOOK DE PEGAR PARTICIPANTES POR EVENTO
+    const {
+        getAllParticipantByEvent: getAllParticipantByEventMutation,
+        isLoading: isGettingParticipantByEvent,
+        error: getParticipantByEventError,
+    } = useGetAllParticipantByEvent();
     // ------------------------------------
 
     // A lista de eventos agora começa vazia e será preenchida pelo useEffect/Hook.
@@ -203,7 +206,7 @@ export default function EventManagementSystem() {
     };
 
 
-    const openAddParticipantModal = (event: EventState) => {
+    const openAddParticipantModal = async (event: EventState) => {
         setGlobalError(null);
         setParticipantForm(prev => ({
             ...prev,
@@ -243,12 +246,13 @@ export default function EventManagementSystem() {
                 return;
             }
 
-            // O retorno da API (newParticipantData) deve ser um 'returnParticipant' com um ID.
-            const newParticipant: Participant = {
-                id: newParticipantData.idparticipant, // Assumindo que o ID do participante retornado se chama idParticipant
+            // O retorno da API (newParticipantData) deve ser um 'ParticipantWithEvent' com um ID.
+            const newParticipant: completeParticipant = {
+                idparticipant: newParticipantData.idparticipant, // Assumindo que o ID do participante retornado se chama idParticipant
                 name: newParticipantData.name,
                 email: newParticipantData.email,
                 phone: newParticipantData.phone,
+                eventId: selectedEvent.id
             };
 
             // 1. Atualiza a lista principal de eventos
@@ -289,7 +293,7 @@ export default function EventManagementSystem() {
                 if (event.id === selectedEvent.id) {
                     return {
                         ...event,
-                        participants: event.participants.filter(p => p.id !== participantId)
+                        participants: event.participants.filter(p => p.idparticipant !== participantId)
                     };
                 }
                 return event;
@@ -298,10 +302,31 @@ export default function EventManagementSystem() {
             setEvents(updatedEvents);
             setSelectedEvent(prev => prev ? {
                 ...prev,
-                participants: prev.participants.filter(p => p.id !== participantId)
+                participants: prev.participants.filter(p => p.idparticipant !== participantId)
             } : null);
         }
     };
+
+    const handleGetAllParticipantsByEvent = async (eventId: number, event: EventState) => {
+        try {
+            const participantsData = await getAllParticipantByEventMutation(eventId);
+
+            const updatedEvent: EventState = {
+                ...event,
+                participants: participantsData,
+            };
+
+            setEvents(prevEvents => prevEvents.map(e =>
+                e.id === eventId ? updatedEvent : e
+            ));
+
+            setSelectedEvent(updatedEvent);
+
+        } catch (e) {
+            setGlobalError('Falha ao tentar pegar participantes do evento: ' + deleteError);
+        }
+
+    }
 
     const resetEventForm = () => {
         setEventForm({
@@ -410,6 +435,7 @@ export default function EventManagementSystem() {
                                     }}
                                     clickFunction={() => {
                                         setSelectedEvent(event)
+                                        handleGetAllParticipantsByEvent(event.id, event)
                                     }}
                                 >
                                 </EventComponent>
@@ -487,13 +513,13 @@ export default function EventManagementSystem() {
                                 </button>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="space-y-3 h-[200px] overflow-y-auto">
                                 {selectedEvent.participants.length === 0 ? (
                                     <p className="text-gray-500 text-center py-8">Nenhum participante cadastrado</p>
                                 ) : (
                                     selectedEvent.participants.map(participant => (
                                         <div
-                                            key={participant.id}
+                                            key={participant.idparticipant}
                                             className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all"
                                         >
                                             <div>
@@ -502,7 +528,7 @@ export default function EventManagementSystem() {
                                                 <p className="text-sm text-gray-600">{participant.phone}</p>
                                             </div>
                                             <button
-                                                onClick={() => handleRemoveParticipant(participant.id)}
+                                                onClick={() => handleRemoveParticipant(participant.idparticipant)}
                                                 className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
                                             >
                                                 <Trash2 className="w-5 h-5" />
