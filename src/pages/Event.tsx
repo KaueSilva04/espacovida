@@ -46,8 +46,7 @@ interface ParticipantFormState {
     name: string;
     email: string;
     phone: string;
-    // Adicionado idEvent para facilitar o envio à API no hook
-    idEvent: number | null;
+    eventId: number | null;
 }
 
 // Tipo para o estado selecionado (pode ser um EventState ou null)
@@ -135,7 +134,7 @@ export default function EventManagementSystem() {
         name: '',
         email: '',
         phone: '',
-        idEvent: null // NOVO: Campo para vincular o participante ao evento
+        eventId: null
     });
 
     // --- FUNÇÃO DE CRIAÇÃO (Inclusão de evento na lista local após sucesso da API) ---
@@ -204,12 +203,11 @@ export default function EventManagementSystem() {
     };
 
 
-    // Função para abrir o modal de participante e setar o idEvent
     const openAddParticipantModal = (event: EventState) => {
         setGlobalError(null);
         setParticipantForm(prev => ({
             ...prev,
-            idEvent: event.id
+            eventId: event.id
         }));
         setSelectedEvent(event);
         setShowParticipantModal(true);
@@ -218,7 +216,7 @@ export default function EventManagementSystem() {
     // FUNÇÃO DE ADIÇÃO DE PARTICIPANTE (AGORA CHAMA O HOOK/API)
     const handleAddParticipant = async () => {
         setGlobalError(null); // Limpa erros anteriores
-        if (!selectedEvent || !participantForm.name || !participantForm.email || participantForm.idEvent === null) {
+        if (!selectedEvent || !participantForm.name || !participantForm.email || participantForm.eventId === null) {
             setGlobalError('Selecione um evento e preencha nome e email!');
             return;
         }
@@ -233,7 +231,7 @@ export default function EventManagementSystem() {
             name: participantForm.name,
             email: participantForm.email,
             phone: participantForm.phone,
-            eventId: participantForm.idEvent
+            eventId: selectedEvent.id
         };
 
         try {
@@ -321,7 +319,7 @@ export default function EventManagementSystem() {
             name: '',
             email: '',
             phone: '',
-            idEvent: null // Limpa o ID do evento também
+            eventId: null // Limpa o ID do evento também
         });
     };
 
