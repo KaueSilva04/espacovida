@@ -2,7 +2,7 @@ export interface newParticipant {
     name : string;
     email : string;
     phone? : string;
-    eventId: number;
+    idEvent: number;
 }
 
 export default newParticipant;

@@ -231,7 +231,7 @@ export default function EventManagementSystem() {
             name: participantForm.name,
             email: participantForm.email,
             phone: participantForm.phone,
-            eventId: selectedEvent.id
+            idEvent: selectedEvent.id
         };
 
         try {
