@@ -4,14 +4,14 @@ import { creatUserService } from '../../services/userServices/createUser.Service
 
 export const useCreateUser = () => {
 
-const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const createUser = async (userData: createUser): Promise<createUser | null> => {
         try {
             setLoading(true);
             setError(null);
-            
+
             const response = await creatUserService.createEvent(userData);
             return response;
         } catch (err) {

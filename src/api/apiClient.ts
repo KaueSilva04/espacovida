@@ -10,7 +10,7 @@ interface ErrorBody {
 // Interface para as opções, estendendo RequestInit para tipagem nativa do fetch
 interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   // O body aceita qualquer tipo para ser transformado em JSON.
-  body?: unknown; 
+  body?: unknown;
   // Tipando os headers como um Record de string
   headers?: Record<string, string>;
 }
@@ -25,15 +25,15 @@ interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
 async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Promise<T | null> {
   // Constrói a URL completa
   const url = `${BASE_URL}${endpoint}`;
-  
-  
+
+
   // Define os Headers padrão e sobrescreve com os headers fornecidos
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     // Adiciona o token, se existir
     ...options.headers,
   };
-  
+
   // Junta as opções do fetch
   const { body, headers: optHeaders, ...restOptions } = options;
 
@@ -46,13 +46,20 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
         body instanceof URLSearchParams ||
         body instanceof Blob ||
         body instanceof ArrayBuffer
-      ? (body as BodyInit)
-      : JSON.stringify(body);
+        ? (body as BodyInit)
+        : JSON.stringify(body);
 
   const config: RequestInit = {
     ...restOptions,
     headers: defaultHeaders,
     body: resolvedBody,
+
+    // --- AQUI ESTÁ A CORREÇÃO ---
+    // Esta é a opção 'fetch' equivalente ao 'withCredentials: true' do axios.
+    // Isto diz ao navegador para enviar cookies e cabeçalhos de autorização,
+    // mesmo em pedidos cross-origin, permitindo que o 'Set-Cookie' funcione.
+    credentials: 'include',
+    // -------------------------
   };
 
   let response: Response;
@@ -69,15 +76,16 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
   if (!response.ok) {
     // Trata o erro 401 (Não Autorizado/Token Expirado)
     if (response.status === 401) {
-      window.location.href = '/login'; 
+      window.location.href = '/login';
       throw new Error('Sessão expirada. Por favor, faça login novamente.');
     }
 
     // Tenta ler o body da resposta para pegar a mensagem de erro do backend
     const errorBody: ErrorBody = await response.json().catch(() => ({ message: response.statusText }));
-    
+
     // Lança um erro mais detalhado
     throw new Error(errorBody.message || `Erro do Servidor: ${response.status}`);
+    
   }
 
   // 4. Converte o corpo para JSON automaticamente
@@ -87,7 +95,7 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
     // O tipo T é injetado aqui
     return response.json() as Promise<T>;
   }
-  
+
   // Retorna a resposta crua
   return response.text().then(text => text ? null : null); // Retorna null para 204 No Content, ou se for texto puro
 }
@@ -101,16 +109,15 @@ interface ApiMethods {
 }
 
 export const api: ApiMethods = {
-  get: <T>(endpoint: string, options?: ApiFetchOptions) => 
+  get: <T>(endpoint: string, options?: ApiFetchOptions) =>
     apiFetch<T>(endpoint, { method: 'GET', ...options }),
-    
-  post: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) => 
+  post: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) =>
     apiFetch<T>(endpoint, { method: 'POST', body, ...options }),
-    
-  put: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) => 
+
+  put: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) =>
     apiFetch<T>(endpoint, { method: 'PUT', body, ...options }),
-    
-  delete: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) => 
+
+  delete: <T, D>(endpoint: string, body: D, options?: ApiFetchOptions) =>
     apiFetch<T>(endpoint, { method: 'DELETE', body, ...options }),
 };
 
