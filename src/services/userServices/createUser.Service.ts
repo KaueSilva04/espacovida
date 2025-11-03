@@ -3,7 +3,7 @@ import createUser from '../../interfaces/userInterfaces/createUser.Interface';
 import ApiResponse from '../../interfaces/ApiResponse.Interface';
 
 export const creatUserService = {
-    async createEvent(data: createUser): Promise<createUser> {
+    async createUser(data: createUser): Promise<createUser> {
         const response = await api.post<ApiResponse<createUser>, createUser>('/user', data)
 
         if (!response || !response.data) {

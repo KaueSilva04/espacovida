@@ -12,7 +12,7 @@ export const useCreateUser = () => {
             setLoading(true);
             setError(null);
 
-            const response = await creatUserService.createEvent(userData);
+            const response = await creatUserService.createUser(userData);
             return response;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred while creating the participant');

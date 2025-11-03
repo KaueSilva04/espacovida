@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { loginUser } from '../../interfaces/userInterfaces/loginUser.Iterface';
+import { loginUser } from '../../interfaces/userInterfaces/loginUser.Interface';
 import { loginUserService } from '../../services/userServices/loginUser.Service';
 
 

@@ -1,5 +1,5 @@
 import api from '../../api/apiClient';
-import loginUser from '../../interfaces/userInterfaces/loginUser.Iterface';
+import loginUser from '../../interfaces/userInterfaces/loginUser.Interface';
 import ApiResponse from '../../interfaces/ApiResponse.Interface';
 
 export const loginUserService = {
