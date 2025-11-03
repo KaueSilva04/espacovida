@@ -1,25 +1,17 @@
-import React, { useState, useEffect } from 'react'; // Importado useEffect
-import { Calendar, Users, MapPin, Clock, Plus, Edit2, Trash2, UserPlus, Search, Filter, X, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, Users, MapPin, Clock, Plus, Trash2, UserPlus, Search, X } from 'lucide-react';
 import ModalComponent from '../components/Modal';
 
-// --- 1. Importações do Hook e Interfaces ---
-// Assumindo os caminhos corretos:
 import { useCreateEvent } from '../hooks/eventHooks/createEvent.Hook';
-// Importação do useDeleteEvent (necessário para a função de exclusão)
-import { useDeleteEvent } from '../hooks/eventHooks/deleteEvent.Hook'; // <-- Assumindo este caminho
-// Importação do useGetAllEvent
+import { useDeleteEvent } from '../hooks/eventHooks/deleteEvent.Hook';
 import { useGetAllEvent } from '../hooks/eventHooks/getAllEvent.Hook';
-import { createEvent, completeEvent } from '../interfaces/eventInterfaces/createEvent.Interface'; // Tipagem de envio
-// completeEvent é usada como tipagem base
-
-// NOVO: Importação do hook de participante
-import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook'; // <-- Assumindo este caminho correto
-// NOVO: Importação da interface newParticipant (para enviar à API)
+import { createEvent } from '../interfaces/eventInterfaces/createEvent.Interface';
+import { completeEvent } from '../interfaces/eventInterfaces/completeEvent.Interface'
+import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook';
 import { newParticipant as NewParticipantInterface } from '../interfaces/participantInterfaces/newParticipant.Interface';
 import EventComponent from '../components/EventPageModals/EventComponent';
 
 // --- 2. Definição das Interfaces do Componente ---
-
 interface Participant {
     id: number;
     name: string;
@@ -27,15 +19,17 @@ interface Participant {
     phone: string;
 }
 
-// O tipo de evento usado no estado local (State do React)
-// NOTE: O EventState agora reflete o que você espera do backend (completeEvent)
 interface EventState extends completeEvent {
     // O idevent é number, mas os IDs mockados são number
     id: number;
+    title: string;
+    description: string
     time: string; // Adicionado para manter a estrutura do seu estado mockado
     maxParticipants: number;
     participants: Participant[];
     status: 'upcoming' | 'completed' | 'cancelled' | string;
+    date: string;
+    location: string
 }
 
 // O formulário de novo evento
@@ -99,14 +93,9 @@ export default function EventManagementSystem() {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [globalError, setGlobalError] = useState<string | null>(null); // Erros de formulário/gerais
-
-    // Estado para controlar se os dados devem ser recarregados
     const [shouldRefetch, setShouldRefetch] = useState<boolean>(true);
 
 
-    // --- CORREÇÃO 1: EFEITO PARA INICIAR A BUSCA NA MONTAGEM OU QUANDO shouldRefetch MUDA ---
-    // Chama a função de fetch apenas na montagem (mount) do componente.
-    // É uma boa prática separar o carregamento inicial da reação aos dados carregados.
     useEffect(() => {
         if (shouldRefetch) {
             // Chama a função para iniciar a busca. Ela atualizará 'fetchedEvents'.
@@ -115,9 +104,6 @@ export default function EventManagementSystem() {
         }
     }, [shouldRefetch, fetchEvents]);
 
-    // --- CORREÇÃO 2: EFEITO PARA ATUALIZAR O ESTADO LOCAL (events) QUANDO fetchedEvents MUDA ---
-    // Este efeito é executado sempre que 'fetchedEvents' (os dados do hook) é atualizado.
-    // Garante que o estado local 'events' seja preenchido corretamente.
     useEffect(() => {
         if (fetchedEvents) {
             // Mapeia para garantir a estrutura correta (se houver campos adicionais necessários no estado local)
@@ -173,44 +159,35 @@ export default function EventManagementSystem() {
 
             const newEvent: EventState = {
                 ...newEventData,
-                id: newEventData.idevent, // Usa o idevent como ID local
-                time: eventForm.time, // Usa o tempo do formulário para exibição
+                id: newEventData.idevent,
+                time: eventForm.time, 
                 maxParticipants: eventForm.maxParticipants,
                 participants: [],
                 status: 'upcoming'
             };
 
-            // Adiciona o novo evento na lista local
             setEvents(prevEvents => [...prevEvents, newEvent]);
-
-            // Alternativamente, após uma operação de sucesso, você pode disparar um refetch completo
-            // setShouldRefetch(true); 
-
             setShowEventModal(false);
             resetEventForm();
         } catch (e) {
-            // Usando o erro do hook se o catch interno do hook não lançar (o seu hook lança)
             setGlobalError(createError || (e as Error).message);
         }
     };
 
-    // --- FUNÇÕES DE MANIPULAÇÃO LOCAL ---
 
+    // --- FUNÇÕES DE MANIPULAÇÃO LOCAL ---
     const handleDeleteEvent = (eventId: number) => {
         setGlobalError(null);
         setEventToDeleteId(eventId);
         setShowDeleteModal(true);
     };
 
-    // --- FUNÇÃO PARA CONFIRMAR A EXCLUSÃO (Chama o hook de exclusão) ---
     const confirmDeleteEvent = async () => {
         if (eventToDeleteId !== null) {
             setGlobalError(null);
             try {
-                // CHAMA A API PARA DELETAR
                 await deleteEventMutation(eventToDeleteId);
 
-                // Se a chamada de API for bem-sucedida, atualiza o estado local:
                 setEvents(events.filter(e => e.id !== eventToDeleteId));
 
                 if (selectedEvent && selectedEvent.id === eventToDeleteId) {
@@ -221,21 +198,20 @@ export default function EventManagementSystem() {
                 setShowDeleteModal(false);
 
             } catch (e) {
-                // Se houver erro, exibe o erro retornado pelo hook de exclusão
                 setGlobalError('Falha ao excluir evento: ' + deleteError);
             }
         }
     };
-    // -------------------------------------------
 
-    // NOVO: Função para abrir o modal de participante e setar o idEvent
+
+    // Função para abrir o modal de participante e setar o idEvent
     const openAddParticipantModal = (event: EventState) => {
-        setGlobalError(null); // Limpa erros globais antes de abrir
+        setGlobalError(null);
         setParticipantForm(prev => ({
             ...prev,
-            idEvent: event.id // Define o ID do evento para onde o participante será adicionado
+            idEvent: event.id
         }));
-        setSelectedEvent(event); // Garante que o evento selecionado está correto
+        setSelectedEvent(event);
         setShowParticipantModal(true);
     };
 
@@ -257,7 +233,7 @@ export default function EventManagementSystem() {
             name: participantForm.name,
             email: participantForm.email,
             phone: participantForm.phone,
-            idEvent: participantForm.idEvent
+            eventId: participantForm.idEvent
         };
 
         try {
@@ -265,16 +241,13 @@ export default function EventManagementSystem() {
             const newParticipantData = await createParticipantMutation(payload);
 
             if (!newParticipantData) {
-                // O erro é lançado no hook, mas como ele retorna null em caso de erro, 
-                // e o erro é setado no state 'addParticipantError', podemos checá-lo.
-                // Caso a promessa seja rejeitada, o catch é executado, mas a verificação é um bom fallback
                 setGlobalError(addParticipantError || 'Falha desconhecida ao adicionar participante.');
                 return;
             }
 
             // O retorno da API (newParticipantData) deve ser um 'returnParticipant' com um ID.
             const newParticipant: Participant = {
-                id: newParticipantData.idParticipant, // Assumindo que o ID do participante retornado se chama idParticipant
+                id: newParticipantData.idparticipant, // Assumindo que o ID do participante retornado se chama idParticipant
                 name: newParticipantData.name,
                 email: newParticipantData.email,
                 phone: newParticipantData.phone,
@@ -359,18 +332,12 @@ export default function EventManagementSystem() {
         return matchesSearch && matchesFilter;
     });
 
-    // Determina qual erro exibir globalmente
-    // NOVO: Adicionado addParticipantError
     const currentGlobalError = fetchError || deleteError || createError || addParticipantError || globalError;
-
-    // Se estiver buscando e não houver dados, exibe carregamento.
     const showLoading = isFetching && events.length === 0;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-gray-100 p-6">
             <div className="max-w-7xl mx-auto">
-
-                {/* Header */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
@@ -393,7 +360,6 @@ export default function EventManagementSystem() {
                         </button>
                     </div>
 
-                    {/* Search and Filter */}
                     <div className="flex flex-col md:flex-row gap-4 mt-6">
                         <div className="flex-1 relative">
                             <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -405,7 +371,7 @@ export default function EventManagementSystem() {
                                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
                             />
                         </div>
-                        {/* Adiciona o display de erro global */}
+
                         {currentGlobalError && (
                             <div className="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex-1 flex items-center gap-2">
                                 <X className="w-5 h-5" />
@@ -415,7 +381,6 @@ export default function EventManagementSystem() {
                     </div>
                 </div>
 
-                {/* Status de Carregamento da Busca */}
                 {showLoading && (
                     <div className="text-center p-8 text-lg text-gray-500">
                         <Clock className="w-6 h-6 inline mr-2 animate-spin" />
@@ -423,8 +388,6 @@ export default function EventManagementSystem() {
                     </div>
                 )}
 
-                {/* Events List/Grid (Código de renderização) */}
-                {/* Verifica se não está carregando E se não há eventos (e não há erro de fetch) para mostrar a mensagem de vazio */}
                 {!showLoading && events.length === 0 && !currentGlobalError ? (
                     <div className="text-center p-8 text-gray-500">
                         Nenhum evento encontrado.
@@ -480,7 +443,6 @@ export default function EventManagementSystem() {
                     )
                 )}
 
-                {/* Event Detail Modal (Simplificado o uso do SelectedEvent para ser tipado) */}
                 {selectedEvent && (
                     <ModalComponent Titulo={selectedEvent.title} OnClickClose={() => setSelectedEvent(null)} width='[1000px]' height='90vh'>
                             <div className="p-6">
@@ -555,7 +517,6 @@ export default function EventManagementSystem() {
                     </ModalComponent>
                 )}
 
-                {/* Delete Confirmation Modal */}
                 {showDeleteModal && (
                     <ModalComponent Titulo='Confirmação de Exclusão' OnClickClose={() => setShowDeleteModal(false)} width='2xl' height='90vh'>
                         <div className="p-6 space-y-4">
@@ -589,9 +550,8 @@ export default function EventManagementSystem() {
                     </ModalComponent>
                 )}
 
-                {/* Create Event Modal */}
                 {showEventModal && (
-                    <ModalComponent Titulo='Criar Novo Evento' OnClickClose={() => { setShowEventModal(false); resetEventForm() }} width='[1000px]' height='9vh'>
+                    <ModalComponent Titulo='Criar Novo Evento' OnClickClose={() => { setShowEventModal(false); resetEventForm() }} width='' height='9vh'>
                         <div className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Título *</label>
@@ -685,7 +645,6 @@ export default function EventManagementSystem() {
                     </ModalComponent>
                 )}
 
-                {/* Add Participant Modal (Atualizado com lógica de API) */}
                 {showParticipantModal && selectedEvent && (
                     <ModalComponent
                         Titulo='Adicionar Participante'
@@ -698,7 +657,6 @@ export default function EventManagementSystem() {
                         height='90vh'
                     >
                         <div className="p-6 space-y-4">
-                            {/* NOVO: Exibe erro de adição de participante */}
                             {addParticipantError && (
                                 <div className="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
                                     <X className="w-5 h-5" />
