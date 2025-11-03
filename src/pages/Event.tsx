@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'; // Importado useEffect
 import { Calendar, Users, MapPin, Clock, Plus, Edit2, Trash2, UserPlus, Search, Filter, X, CheckCircle } from 'lucide-react';
+import ModalComponent from '../components/Modal';
 
 // --- 1. Importações do Hook e Interfaces ---
 // Assumindo os caminhos corretos:
@@ -7,7 +8,7 @@ import { useCreateEvent } from '../hooks/eventHooks/createEvent.Hook';
 // Importação do useDeleteEvent (necessário para a função de exclusão)
 import { useDeleteEvent } from '../hooks/eventHooks/deleteEvent.Hook'; // <-- Assumindo este caminho
 // Importação do useGetAllEvent
-import { useGetAllEvent } from '../hooks/eventHooks/getAllEvent.Hook'; 
+import { useGetAllEvent } from '../hooks/eventHooks/getAllEvent.Hook';
 import { createEvent, completeEvent } from '../interfaces/eventInterfaces/createEvent.Interface'; // Tipagem de envio
 // completeEvent é usada como tipagem base
 
@@ -29,7 +30,7 @@ interface Participant {
 // NOTE: O EventState agora reflete o que você espera do backend (completeEvent)
 interface EventState extends completeEvent {
     // O idevent é number, mas os IDs mockados são number
-    id: number; 
+    id: number;
     time: string; // Adicionado para manter a estrutura do seu estado mockado
     maxParticipants: number;
     participants: Participant[];
@@ -51,7 +52,7 @@ interface ParticipantFormState {
     email: string;
     phone: string;
     // Adicionado idEvent para facilitar o envio à API no hook
-    idEvent: number | null; 
+    idEvent: number | null;
 }
 
 // Tipo para o estado selecionado (pode ser um EventState ou null)
@@ -61,27 +62,27 @@ type SelectedEvent = EventState | null;
 export default function EventManagementSystem() {
     // --- 3. Inicialização dos Hooks ---
     const { isLoading: isCreating, error: createError, createEvent: createEventMutation } = useCreateEvent();
-    
+
     // INICIALIZAÇÃO DO HOOK DE EXCLUSÃO (Para manter a funcionalidade anterior)
-    const { 
-        deleteEvent: deleteEventMutation, 
-        isLoading: isDeleting, 
-        error: deleteError 
+    const {
+        deleteEvent: deleteEventMutation,
+        isLoading: isDeleting,
+        error: deleteError
     } = useDeleteEvent();
-    
+
     // INICIALIZAÇÃO DO HOOK DE BUSCA DE EVENTOS
-    const { 
-        getAllEvent: fetchEvents, 
-        data: fetchedEvents, 
-        isLoading: isFetching, 
-        error: fetchError 
+    const {
+        getAllEvent: fetchEvents,
+        data: fetchedEvents,
+        isLoading: isFetching,
+        error: fetchError
     } = useGetAllEvent();
-    
+
     // NOVO: INICIALIZAÇÃO DO HOOK DE ADIÇÃO DE PARTICIPANTE
-    const { 
-        createParticipant: createParticipantMutation, 
-        loading: isAddingParticipant, 
-        error: addParticipantError 
+    const {
+        createParticipant: createParticipantMutation,
+        loading: isAddingParticipant,
+        error: addParticipantError
     } = useNewParticipant();
     // ------------------------------------
 
@@ -111,7 +112,7 @@ export default function EventManagementSystem() {
             fetchEvents();
             setShouldRefetch(false); // Evita o refetch automático até ser acionado novamente
         }
-    }, [shouldRefetch, fetchEvents]); 
+    }, [shouldRefetch, fetchEvents]);
 
     // --- CORREÇÃO 2: EFEITO PARA ATUALIZAR O ESTADO LOCAL (events) QUANDO fetchedEvents MUDA ---
     // Este efeito é executado sempre que 'fetchedEvents' (os dados do hook) é atualizado.
@@ -123,12 +124,12 @@ export default function EventManagementSystem() {
                 ...event,
                 // Garantindo que 'id' e 'time' estejam presentes conforme o EventState local
                 id: event.idevent, // Usa idevent como ID local
-                time: new Date(event.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), 
+                time: new Date(event.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                 participants: (event as EventState).participants || [],
                 maxParticipants: (event as EventState).maxParticipants || 100, // Valor padrão se não vier da API
                 status: (event as EventState).status || 'upcoming'
             }));
-            
+
             setEvents(mappedEvents);
         }
     }, [fetchedEvents]); // Depende do estado de dados do hook
@@ -149,7 +150,7 @@ export default function EventManagementSystem() {
         phone: '',
         idEvent: null // NOVO: Campo para vincular o participante ao evento
     });
-    
+
     // --- FUNÇÃO DE CRIAÇÃO (Inclusão de evento na lista local após sucesso da API) ---
     const handleCreateEvent = async () => {
         setGlobalError(null);
@@ -162,10 +163,10 @@ export default function EventManagementSystem() {
             title: eventForm.title,
             description: eventForm.description,
             // Seu backend espera o formato ISO com timezone (Z), então a concatenação é crucial.
-            date: `${eventForm.date}T${eventForm.time}:00.000Z`, 
+            date: `${eventForm.date}T${eventForm.time}:00.000Z`,
             location: eventForm.location,
         };
-        
+
         try {
             const newEventData = await createEventMutation(payload);
 
@@ -180,7 +181,7 @@ export default function EventManagementSystem() {
 
             // Adiciona o novo evento na lista local
             setEvents(prevEvents => [...prevEvents, newEvent]);
-            
+
             // Alternativamente, após uma operação de sucesso, você pode disparar um refetch completo
             // setShouldRefetch(true); 
 
@@ -191,9 +192,9 @@ export default function EventManagementSystem() {
             setGlobalError(createError || (e as Error).message);
         }
     };
-    
+
     // --- FUNÇÕES DE MANIPULAÇÃO LOCAL ---
-    
+
     const handleDeleteEvent = (eventId: number) => {
         setGlobalError(null);
         setEventToDeleteId(eventId);
@@ -206,15 +207,15 @@ export default function EventManagementSystem() {
             setGlobalError(null);
             try {
                 // CHAMA A API PARA DELETAR
-                await deleteEventMutation(eventToDeleteId); 
-                
+                await deleteEventMutation(eventToDeleteId);
+
                 // Se a chamada de API for bem-sucedida, atualiza o estado local:
                 setEvents(events.filter(e => e.id !== eventToDeleteId));
-                
+
                 if (selectedEvent && selectedEvent.id === eventToDeleteId) {
                     setSelectedEvent(null);
                 }
-                
+
                 setEventToDeleteId(null);
                 setShowDeleteModal(false);
 
@@ -236,7 +237,7 @@ export default function EventManagementSystem() {
         setSelectedEvent(event); // Garante que o evento selecionado está correto
         setShowParticipantModal(true);
     };
-    
+
     // FUNÇÃO DE ADIÇÃO DE PARTICIPANTE (AGORA CHAMA O HOOK/API)
     const handleAddParticipant = async () => {
         setGlobalError(null); // Limpa erros anteriores
@@ -263,9 +264,9 @@ export default function EventManagementSystem() {
             const newParticipantData = await createParticipantMutation(payload);
 
             if (!newParticipantData) {
-                 // O erro é lançado no hook, mas como ele retorna null em caso de erro, 
-                 // e o erro é setado no state 'addParticipantError', podemos checá-lo.
-                 // Caso a promessa seja rejeitada, o catch é executado, mas a verificação é um bom fallback
+                // O erro é lançado no hook, mas como ele retorna null em caso de erro, 
+                // e o erro é setado no state 'addParticipantError', podemos checá-lo.
+                // Caso a promessa seja rejeitada, o catch é executado, mas a verificação é um bom fallback
                 setGlobalError(addParticipantError || 'Falha desconhecida ao adicionar participante.');
                 return;
             }
@@ -277,7 +278,7 @@ export default function EventManagementSystem() {
                 email: newParticipantData.email,
                 phone: newParticipantData.phone,
             };
-            
+
             // 1. Atualiza a lista principal de eventos
             const updatedEvents = events.map(event => {
                 if (event.id === selectedEvent.id) {
@@ -290,13 +291,13 @@ export default function EventManagementSystem() {
             });
 
             setEvents(updatedEvents);
-            
+
             // 2. Atualiza o evento selecionado (para o modal de detalhes)
-            setSelectedEvent(prev => prev ? { 
-                ...prev, 
-                participants: [...prev.participants, newParticipant] 
+            setSelectedEvent(prev => prev ? {
+                ...prev,
+                participants: [...prev.participants, newParticipant]
             } : null);
-            
+
             // 3. Fecha o modal e limpa o formulário
             setShowParticipantModal(false);
             resetParticipantForm();
@@ -309,7 +310,7 @@ export default function EventManagementSystem() {
 
     const handleRemoveParticipant = (participantId: number) => {
         if (!selectedEvent) return;
-        
+
         // Mantido o código original para remoção local, já que não há serviço de remoção fornecido.
         if (window.confirm('Remover este participante?')) {
             const updatedEvents = events.map(event => {
@@ -352,11 +353,11 @@ export default function EventManagementSystem() {
 
     const filteredEvents = events.filter(event => {
         const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             event.location.toLowerCase().includes(searchTerm.toLowerCase());
+            event.location.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesFilter = filterStatus === 'all' || event.status === filterStatus;
         return matchesSearch && matchesFilter;
     });
-    
+
     // Determina qual erro exibir globalmente
     // NOVO: Adicionado addParticipantError
     const currentGlobalError = fetchError || deleteError || createError || addParticipantError || globalError;
@@ -367,7 +368,7 @@ export default function EventManagementSystem() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-gray-100 p-6">
             <div className="max-w-7xl mx-auto">
-                
+
                 {/* Header */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -381,11 +382,10 @@ export default function EventManagementSystem() {
                                 setGlobalError(null); // Limpa erro ao abrir o modal
                             }}
                             disabled={isCreating}
-                            className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${
-                                isCreating 
-                                    ? 'bg-gray-400 cursor-not-allowed' 
-                                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                            }`}
+                            className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${isCreating
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                }`}
                         >
                             <Plus className="w-5 h-5" />
                             {isCreating ? 'Aguarde...' : 'Novo Evento'}
@@ -465,7 +465,7 @@ export default function EventManagementSystem() {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteEvent(event.id); 
+                                                    handleDeleteEvent(event.id);
                                                 }}
                                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                             >
@@ -504,24 +504,9 @@ export default function EventManagementSystem() {
 
                 {/* Event Detail Modal (Simplificado o uso do SelectedEvent para ser tipado) */}
                 {selectedEvent && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                            <div className="bg-gradient-to-r from-green-600 to-blue-600 p-6 text-white">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h2 className="text-2xl font-bold mb-2">{selectedEvent.title}</h2>
-                                        <p className="text-green-50">{selectedEvent.description}</p>
-                                    </div>
-                                    <button
-                                        onClick={() => setSelectedEvent(null)}
-                                        className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all"
-                                    >
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                </div>
-                            </div>
-
+                    <ModalComponent Titulo={selectedEvent.title} OnClickClose={() => setSelectedEvent(null)} width='4xl' height='90vh'>
                             <div className="p-6">
+                                <p className="text-green-50">{selectedEvent.description}</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                     <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                                         <Calendar className="w-6 h-6 text-green-600" />
@@ -589,253 +574,215 @@ export default function EventManagementSystem() {
                                     )}
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                    </ModalComponent>
                 )}
-                
+
                 {/* Delete Confirmation Modal */}
                 {showDeleteModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full">
-                            <div className="bg-red-500 p-6 text-white rounded-t-2xl flex items-center gap-3">
-                                <Trash2 className="w-6 h-6" />
-                                <h2 className="text-xl font-bold">Confirmação de Exclusão</h2>
-                            </div>
+                    <ModalComponent Titulo='Confirmação de Exclusão' OnClickClose={() => setShowDeleteModal(false)} width='2xl' height='90vh'>
+                        <div className="p-6 space-y-4">
+                            <p className="text-gray-700">
+                                Tem certeza que deseja <strong className="font-bold text-red-600">excluir</strong> este evento? Esta ação não pode ser desfeita.
+                            </p>
 
-                            <div className="p-6 space-y-4">
-                                <p className="text-gray-700">
-                                    Tem certeza que deseja <strong className="font-bold text-red-600">excluir</strong> este evento? Esta ação não pode ser desfeita.
-                                </p>
-
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        onClick={() => {
-                                            setShowDeleteModal(false);
-                                            setEventToDeleteId(null);
-                                        }}
-                                        disabled={isDeleting}
-                                        className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={confirmDeleteEvent}
-                                        disabled={isDeleting}
-                                        className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
-                                            isDeleting 
-                                                ? 'bg-gray-400 cursor-not-allowed' 
-                                                : 'bg-red-600 hover:bg-red-700'
+                            <div className="flex gap-4 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteModal(false);
+                                        setEventToDeleteId(null);
+                                    }}
+                                    disabled={isDeleting}
+                                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={confirmDeleteEvent}
+                                    disabled={isDeleting}
+                                    className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isDeleting
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-red-600 hover:bg-red-700'
                                         }`}
-                                    >
-                                        {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
-                                    </button>
-                                </div>
+                                >
+                                    {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </ModalComponent>
                 )}
 
                 {/* Create Event Modal */}
                 {showEventModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
-                            <div className="bg-gradient-to-r from-green-600 to-blue-600 p-6 text-white rounded-t-2xl">
-                                <div className="flex justify-between items-center">
-                                    <h2 className="text-2xl font-bold">Criar Novo Evento</h2>
-                                    <button
-                                        onClick={() => {
-                                            setShowEventModal(false);
-                                            resetEventForm();
-                                        }}
-                                        className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all"
-                                    >
-                                        <X className="w-6 h-6" />
-                                    </button>
+                    <ModalComponent Titulo='Criar Novo Evento' OnClickClose={() => { setShowEventModal(false); resetEventForm() }} width='4xl' height='9vh'>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Título *</label>
+                                <input
+                                    type="text"
+                                    value={eventForm.title}
+                                    onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    placeholder="Nome do evento"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                                <textarea
+                                    value={eventForm.description}
+                                    onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    rows={3}
+                                    placeholder="Descrição do evento"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Data *</label>
+                                    <input
+                                        type="date"
+                                        value={eventForm.date}
+                                        onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Horário *</label>
+                                    <input
+                                        type="time"
+                                        value={eventForm.time}
+                                        onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })}
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    />
                                 </div>
                             </div>
 
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Título *</label>
-                                    <input
-                                        type="text"
-                                        value={eventForm.title}
-                                        onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        placeholder="Nome do evento"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Local *</label>
+                                <input
+                                    type="text"
+                                    value={eventForm.location}
+                                    onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    placeholder="Endereço do evento"
+                                />
+                            </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
-                                    <textarea
-                                        value={eventForm.description}
-                                        onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        rows={3}
-                                        placeholder="Descrição do evento"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Máximo de Participantes *</label>
+                                <input
+                                    type="number"
+                                    value={eventForm.maxParticipants}
+                                    onChange={(e) => setEventForm({ ...eventForm, maxParticipants: parseInt(e.target.value) || 0 })}
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    placeholder="0"
+                                    min={1}
+                                />
+                            </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Data *</label>
-                                        <input
-                                            type="date"
-                                            value={eventForm.date}
-                                            onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Horário *</label>
-                                        <input
-                                            type="time"
-                                            value={eventForm.time}
-                                            onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })}
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Local *</label>
-                                    <input
-                                        type="text"
-                                        value={eventForm.location}
-                                        onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        placeholder="Endereço do evento"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Máximo de Participantes *</label>
-                                    <input
-                                        type="number"
-                                        value={eventForm.maxParticipants}
-                                        onChange={(e) => setEventForm({ ...eventForm, maxParticipants: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        placeholder="0"
-                                        min={1}
-                                    />
-                                </div>
-
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        onClick={() => {
-                                            setShowEventModal(false);
-                                            resetEventForm();
-                                        }}
-                                        className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={handleCreateEvent}
-                                        disabled={isCreating}
-                                        className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
-                                            isCreating 
-                                                ? 'bg-gray-400 cursor-not-allowed' 
-                                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                            <div className="flex gap-4 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowEventModal(false);
+                                        resetEventForm();
+                                    }}
+                                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleCreateEvent}
+                                    disabled={isCreating}
+                                    className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isCreating
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
                                         }`}
-                                    >
-                                        {isCreating ? 'Criando...' : 'Criar Evento'}
-                                    </button>
-                                </div>
+                                >
+                                    {isCreating ? 'Criando...' : 'Criar Evento'}
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </ModalComponent>
                 )}
 
                 {/* Add Participant Modal (Atualizado com lógica de API) */}
                 {showParticipantModal && selectedEvent && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-                            <div className="bg-gradient-to-r from-green-600 to-blue-600 p-6 text-white rounded-t-2xl">
-                                <div className="flex justify-between items-center">
-                                    <h2 className="text-2xl font-bold">Adicionar Participante</h2>
-                                    <button
-                                        onClick={() => {
-                                            setShowParticipantModal(false);
-                                            resetParticipantForm();
-                                        }}
-                                        className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all"
-                                    >
-                                        <X className="w-6 h-6" />
-                                    </button>
+                    <ModalComponent
+                        Titulo='Adicionar Participante'
+                        OnClickClose={() => {
+                            setShowParticipantModal(false);
+                            resetParticipantForm();
+                        }
+                        }
+                    >
+                        <div className="p-6 space-y-4">
+                            {/* NOVO: Exibe erro de adição de participante */}
+                            {addParticipantError && (
+                                <div className="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
+                                    <X className="w-5 h-5" />
+                                    <span>Erro: {addParticipantError}</span>
                                 </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
+                                <input
+                                    type="text"
+                                    value={participantForm.name}
+                                    onChange={(e) => setParticipantForm({ ...participantForm, name: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    placeholder="Nome completo"
+                                />
                             </div>
 
-                            <div className="p-6 space-y-4">
-                                {/* NOVO: Exibe erro de adição de participante */}
-                                {addParticipantError && (
-                                    <div className="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
-                                        <X className="w-5 h-5" />
-                                        <span>Erro: {addParticipantError}</span>
-                                    </div>
-                                )}
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
-                                    <input
-                                        type="text"
-                                        value={participantForm.name}
-                                        onChange={(e) => setParticipantForm({ ...participantForm, name: e.target.value })}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        placeholder="Nome completo"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                                <input
+                                    type="email"
+                                    value={participantForm.email}
+                                    onChange={(e) => setParticipantForm({ ...participantForm, email: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    placeholder="email@exemplo.com"
+                                />
+                            </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                    <input
-                                        type="email"
-                                        value={participantForm.email}
-                                        onChange={(e) => setParticipantForm({ ...participantForm, email: e.target.value })}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        placeholder="email@exemplo.com"
-                                    />
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                                <input
+                                    type="tel"
+                                    value={participantForm.phone}
+                                    onChange={(e) => setParticipantForm({ ...participantForm, phone: e.target.value })}
+                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    placeholder="(00) 00000-0000"
+                                />
+                            </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
-                                    <input
-                                        type="tel"
-                                        value={participantForm.phone}
-                                        onChange={(e) => setParticipantForm({ ...participantForm, phone: e.target.value })}
-                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                        placeholder="(00) 00000-0000"
-                                    />
-                                </div>
-
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        onClick={() => {
-                                            setShowParticipantModal(false);
-                                            resetParticipantForm();
-                                        }}
-                                        disabled={isAddingParticipant}
-                                        className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={handleAddParticipant}
-                                        disabled={isAddingParticipant}
-                                        className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
-                                            isAddingParticipant
-                                                ? 'bg-gray-400 cursor-not-allowed'
-                                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                            <div className="flex gap-4 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowParticipantModal(false);
+                                        resetParticipantForm();
+                                    }}
+                                    disabled={isAddingParticipant}
+                                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleAddParticipant}
+                                    disabled={isAddingParticipant}
+                                    className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isAddingParticipant
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
                                         }`}
-                                    >
-                                        {isAddingParticipant ? 'Adicionando...' : 'Adicionar'}
-                                    </button>
-                                </div>
+                                >
+                                    {isAddingParticipant ? 'Adicionando...' : 'Adicionar'}
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </ModalComponent>
                 )}
             </div>
         </div>
