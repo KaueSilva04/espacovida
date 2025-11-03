@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 export default function ModalComponent({ children, Titulo, OnClickClose, width, height }: { children: React.ReactNode, Titulo: string, OnClickClose: () => void, width: string, height: string }) {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className={`bg-white rounded-2xl shadow-2xl max-w-${width} w-full max-h-${height}`}>
+            <div className={`bg-white rounded-2xl shadow-2xl w-${width} max-h-${height}`}>
                 <div className="bg-gradient-to-r from-green-600 to-blue-600 p-6 text-white rounded-t-2xl">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-bold">{Titulo}</h2>

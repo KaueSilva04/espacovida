@@ -16,6 +16,7 @@ import { createEvent, completeEvent } from '../interfaces/eventInterfaces/create
 import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook'; // <-- Assumindo este caminho correto
 // NOVO: Importação da interface newParticipant (para enviar à API)
 import { newParticipant as NewParticipantInterface } from '../interfaces/participantInterfaces/newParticipant.Interface';
+import EventComponent from '../components/EventPageModals/EventComponent';
 
 // --- 2. Definição das Interfaces do Componente ---
 
@@ -433,47 +434,24 @@ export default function EventManagementSystem() {
                     view === 'list' ? (
                         <div className="space-y-4">
                             {filteredEvents.map(event => (
-                                <div
+                                <EventComponent 
                                     key={event.id}
-                                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer transform hover:scale-[1.02]"
-                                    onClick={() => setSelectedEvent(event)}
+                                    titulo={event.title}
+                                    descricao={event.description}
+                                    data={event.date}
+                                    hora={event.time}
+                                    localizacao={event.location}
+                                    numParticipante={event.participants.length}
+                                    maxParticipante={event.maxParticipants}
+                                    deleteFunction={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteEvent(event.id);
+                                    }}
+                                    clickFunction={() => {
+                                        setSelectedEvent(event)
+                                    }}
                                 >
-                                    <div className="flex flex-col md:flex-row justify-between gap-4">
-                                        <div className="flex-1">
-                                            <h3 className="text-xl font-bold text-gray-800 mb-2">{event.title}</h3>
-                                            <p className="text-gray-600 mb-4">{event.description}</p>
-                                            <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                                                <div className="flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4 text-green-600" />
-                                                    {new Date(event.date).toLocaleDateString('pt-BR')}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Clock className="w-4 h-4 text-blue-600" />
-                                                    {event.time}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <MapPin className="w-4 h-4 text-red-600" />
-                                                    {event.location}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Users className="w-4 h-4 text-purple-600" />
-                                                    {event.participants.length}/{event.maxParticipants}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex md:flex-col gap-2">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteEvent(event.id);
-                                                }}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                </EventComponent>
                             ))}
                         </div>
                     ) : (
@@ -504,7 +482,7 @@ export default function EventManagementSystem() {
 
                 {/* Event Detail Modal (Simplificado o uso do SelectedEvent para ser tipado) */}
                 {selectedEvent && (
-                    <ModalComponent Titulo={selectedEvent.title} OnClickClose={() => setSelectedEvent(null)} width='4xl' height='90vh'>
+                    <ModalComponent Titulo={selectedEvent.title} OnClickClose={() => setSelectedEvent(null)} width='[1000px]' height='90vh'>
                             <div className="p-6">
                                 <p className="text-green-50">{selectedEvent.description}</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -613,7 +591,7 @@ export default function EventManagementSystem() {
 
                 {/* Create Event Modal */}
                 {showEventModal && (
-                    <ModalComponent Titulo='Criar Novo Evento' OnClickClose={() => { setShowEventModal(false); resetEventForm() }} width='4xl' height='9vh'>
+                    <ModalComponent Titulo='Criar Novo Evento' OnClickClose={() => { setShowEventModal(false); resetEventForm() }} width='[1000px]' height='9vh'>
                         <div className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Título *</label>
@@ -716,6 +694,8 @@ export default function EventManagementSystem() {
                             resetParticipantForm();
                         }
                         }
+                        width='[1000px]'
+                        height='90vh'
                     >
                         <div className="p-6 space-y-4">
                             {/* NOVO: Exibe erro de adição de participante */}

@@ -26,14 +26,11 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
   // Constrói a URL completa
   const url = `${BASE_URL}${endpoint}`;
   
-  // Busca o Token de Autorização
-  const token: string | null = localStorage.getItem('authToken');
   
   // Define os Headers padrão e sobrescreve com os headers fornecidos
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     // Adiciona o token, se existir
-    ...(token && { 'Authorization': `Bearer ${token}` }),
     ...options.headers,
   };
   
@@ -72,8 +69,6 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
   if (!response.ok) {
     // Trata o erro 401 (Não Autorizado/Token Expirado)
     if (response.status === 401) {
-      localStorage.removeItem('authToken');
-      // Redireciona o usuário
       window.location.href = '/login'; 
       throw new Error('Sessão expirada. Por favor, faça login novamente.');
     }
