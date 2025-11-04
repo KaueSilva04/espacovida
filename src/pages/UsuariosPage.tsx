@@ -1,24 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Shield, Calendar, Edit2, Trash2, UserPlus, Filter, AlertCircle, CheckCircle } from 'lucide-react';
 import AddUserModal from '../components/AddUserModal';
-import EditUserModal from '../components/EditUserModal';
 import { useListAllUsers } from '../hooks/userHooks/listAllUser.Hook';
 import { useCreateUser } from '../hooks/userHooks/createUser.Hook';
 import { useDeleteUser } from '../hooks/userHooks/deleteUser.Hook';
-import { useUpdateUser } from '../hooks/userHooks/updateUser.Hook';
 import { user } from '../interfaces/userInterfaces/user.Interface';
 import { createUser } from '../interfaces/userInterfaces/createUser.Interface';
 import { deleteUser } from '../interfaces/userInterfaces/deleteUser.Interface';
-import { updateUser } from '../interfaces/userInterfaces/updateUser.Interface';
 
-interface NewUser {
-    username: string;
-    password: string;
-    confirmPassword: string;
-    question: string;
-    answer: string;
-    isAdmin: boolean;
-}
 
 interface UserDisplay extends user {
     role: 'admin' | 'user';
@@ -28,30 +17,31 @@ interface UserDisplay extends user {
     lastLogin?: string;
 }
 
+
 export default function UsuariosPage() {
     // Hooks
     const { listAllUsers, users: fetchedUsers, loading: isLoadingList, error: fetchError } = useListAllUsers();
     const { createUser: createUserMutation, loading: isCreating, error: createError } = useCreateUser();
     const { deleteUser: deleteUserMutation, loading: isDeleting, error: deleteError } = useDeleteUser();
-    const { updateUser: updateUserMutation, loading: isUpdating, error: updateError } = useUpdateUser();
+
 
     const [users, setUsers] = useState<UserDisplay[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [showAddUserModal, setShowAddUserModal] = useState(false);
-    const [showEditUserModal, setShowEditUserModal] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<any>(null);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
     
     // ✅ Estados de mensagem
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+
     // Carregar usuários ao montar o componente
     useEffect(() => {
         loadUsers();
     }, []);
+
 
     // Atualizar estado local quando fetchedUsers mudar
     useEffect(() => {
@@ -70,6 +60,7 @@ export default function UsuariosPage() {
         }
     }, [fetchedUsers]);
 
+
     const loadUsers = async () => {
         try {
             console.log('Carregando usuários...');
@@ -78,6 +69,7 @@ export default function UsuariosPage() {
             console.error('Erro ao carregar usuários:', error);
         }
     };
+
 
     const filteredUsers = users.filter(user => {
         const matchesSearch = 
@@ -90,7 +82,8 @@ export default function UsuariosPage() {
         return matchesSearch && matchesRole && matchesStatus;
     });
 
-    const handleAddUser = async (newUser: NewUser) => {
+
+    const handleAddUser = async (newUser: any) => {
         try {
             console.log('=== CRIANDO USUÁRIO ===');
             setSuccessMessage(null);
@@ -99,10 +92,9 @@ export default function UsuariosPage() {
             const userData: createUser = {
                 username: newUser.username,
                 password: newUser.password,
-                question: newUser.question,
-                answer: newUser.answer,
                 adm: newUser.isAdmin
             };
+
 
             const result = await createUserMutation(userData);
             
@@ -125,39 +117,6 @@ export default function UsuariosPage() {
         }
     };
 
-    const handleEditUser = async (updatedUser: any) => {
-        try {
-            console.log('=== EDITANDO USUÁRIO ===');
-            setSuccessMessage(null);
-            setErrorMessage(null);
-            
-            const userData: updateUser = {
-                id: updatedUser.iduser,
-                username: updatedUser.username,
-                adm: updatedUser.isAdmin
-            };
-
-            const result = await updateUserMutation(userData);
-            
-            if (result) {
-                console.log('Usuário atualizado com sucesso:', result);
-                setSuccessMessage(`Usuário "${updatedUser.username}" atualizado com sucesso!`);
-                
-                // Limpar mensagem após 4 segundos
-                setTimeout(() => setSuccessMessage(null), 4000);
-                
-                await loadUsers();
-                setShowEditUserModal(false);
-                setSelectedUser(null);
-            } else if (updateError) {
-                console.error('Erro ao atualizar:', updateError);
-                setErrorMessage(`Erro ao atualizar usuário: ${updateError}`);
-            }
-        } catch (error) {
-            console.error('Erro ao atualizar usuário:', error);
-            setErrorMessage('Erro ao atualizar usuário. Tente novamente.');
-        }
-    };
 
     const confirmDeleteUser = async (id: number) => {
         try {
@@ -195,14 +154,6 @@ export default function UsuariosPage() {
         }
     };
 
-    const openEditModal = (user: UserDisplay) => {
-        setSelectedUser({
-            iduser: user.id,
-            username: user.username,
-            isAdmin: user.adm
-        });
-        setShowEditUserModal(true);
-    };
 
     const getRoleBadge = (role: string) => {
         const badges = {
@@ -216,14 +167,17 @@ export default function UsuariosPage() {
         return { class: badges[role as keyof typeof badges], label: labels[role as keyof typeof labels] };
     };
 
+
     const getStatusBadge = (status: string) => {
         return status === 'active' 
             ? { class: 'bg-green-100 text-green-800', label: 'Ativo' }
             : { class: 'bg-gray-100 text-gray-800', label: 'Inativo' };
     };
 
-    const isLoading = isLoadingList || isCreating || isDeleting || isUpdating;
-    const currentError = fetchError || createError || deleteError || updateError;
+
+    const isLoading = isLoadingList || isCreating || isDeleting;
+    const currentError = fetchError || createError || deleteError;
+
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -244,6 +198,7 @@ export default function UsuariosPage() {
                 </div>
             )}
 
+
             {/* Mensagem de Erro */}
             {errorMessage && (
                 <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
@@ -260,6 +215,7 @@ export default function UsuariosPage() {
                     </button>
                 </div>
             )}
+
 
             {/* Header */}
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -281,6 +237,7 @@ export default function UsuariosPage() {
                         {isCreating ? 'Criando...' : 'Novo Usuário'}
                     </button>
                 </div>
+
 
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -328,6 +285,7 @@ export default function UsuariosPage() {
                     </div>
                 </div>
 
+
                 {/* Filtros */}
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
@@ -341,6 +299,7 @@ export default function UsuariosPage() {
                         />
                     </div>
 
+
                     <div className="relative min-w-[180px]">
                         <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <select
@@ -353,6 +312,7 @@ export default function UsuariosPage() {
                             <option value="user">Usuário</option>
                         </select>
                     </div>
+
 
                     <div className="relative min-w-[180px]">
                         <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -368,6 +328,7 @@ export default function UsuariosPage() {
                     </div>
                 </div>
 
+
                 {/* Erro Geral ao Carregar */}
                 {currentError && (
                     <div className="mt-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
@@ -376,6 +337,7 @@ export default function UsuariosPage() {
                     </div>
                 )}
             </div>
+
 
             {/* Mensagem de Confirmação de Exclusão */}
             {userToDelete !== null && (
@@ -410,6 +372,7 @@ export default function UsuariosPage() {
                 </div>
             )}
 
+
             {/* Tabela de Usuários */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 {isLoadingList ? (
@@ -434,7 +397,6 @@ export default function UsuariosPage() {
                                 <tr>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Username</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Função</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold">Pergunta Segurança</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
                                     <th className="px-6 py-4 text-center text-sm font-semibold">Ações</th>
                                 </tr>
@@ -466,23 +428,12 @@ export default function UsuariosPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="text-gray-700 text-sm">{user.question}</span>
-                                            </td>
-                                            <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusBadge.class}`}>
                                                     {statusBadge.label}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex justify-center gap-2">
-                                                    <button
-                                                        onClick={() => openEditModal(user)}
-                                                        disabled={isUpdating}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-50"
-                                                        title="Editar usuário"
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
                                                     <button
                                                         onClick={() => setUserToDelete(user.id)}
                                                         disabled={isDeleting}
@@ -502,6 +453,7 @@ export default function UsuariosPage() {
                 )}
             </div>
 
+
             {/* Modals */}
             <AddUserModal
                 isOpen={showAddUserModal}
@@ -509,15 +461,6 @@ export default function UsuariosPage() {
                 onSave={handleAddUser}
             />
 
-            <EditUserModal
-                isOpen={showEditUserModal}
-                onClose={() => {
-                    setShowEditUserModal(false);
-                    setSelectedUser(null);
-                }}
-                userData={selectedUser}
-                onSave={handleEditUser}
-            />
 
             {/* CSS Animation */}
             <style jsx>{`
