@@ -12,7 +12,7 @@ import System from './pages/Event';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 
 function AppContent() {
-  const nonLayoutPages = ['/login', '/system']
+  const nonLayoutPages = ['/login', '/System']
 
   const location = useLocation();
   const hideLayout = nonLayoutPages.includes(location.pathname)
@@ -28,7 +28,7 @@ function AppContent() {
           <Route path="/doe" element={<Donate />} />
           <Route path="/contato" element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/system" element={<ProtectedRoute element={<System />} />} />
+          <Route path="/System" element={<ProtectedRoute element={<System />} />} />
 
           <Route
             path="*"
