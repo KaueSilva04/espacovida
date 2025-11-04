@@ -10,12 +10,13 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import System from './pages/Event';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import { PublicRoute } from './components/layout/PublicRoute';
 
 function AppContent() {
-  const nonLayoutPages = ['/login', '/System']
+  const nonLayoutPages = ['/login', '/System'];
 
   const location = useLocation();
-  const hideLayout = nonLayoutPages.includes(location.pathname)
+  const hideLayout = nonLayoutPages.includes(location.pathname);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -27,7 +28,7 @@ function AppContent() {
           <Route path="/eventos" element={<Events />} />
           <Route path="/doe" element={<Donate />} />
           <Route path="/contato" element={<Contact />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<PublicRoute element={<Login />} />} />
           <Route path="/System" element={<ProtectedRoute element={<System />} />} />
 
           <Route

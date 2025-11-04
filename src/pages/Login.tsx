@@ -3,19 +3,23 @@ import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
 // Importando o hook de login que você criou
 import { useloginUser } from '../hooks/userHooks/loginUser.Hook'; // Ajuste o caminho se necessário
 
+import { useNavigate } from 'react-router-dom';
+
 // Não é necessário importar a interface loginUser aqui, pois o hook já a utiliza.
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // 'errors' agora irá armazenar tanto erros de validação do formulário quanto erros da API
-  const [errors, setErrors] = useState<{username?: string, password?: string, api?: string}>({});
-  
+  const [errors, setErrors] = useState<{ username?: string, password?: string, api?: string }>({});
+
   // O 'isLoading' foi removido, pois usaremos o 'apiLoading' do seu hook
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   // Instanciando o hook e renomeando as variáveis para evitar conflitos
   const { loginUser: callLoginApi, loading: apiLoading, error: apiError } = useloginUser();
@@ -32,20 +36,20 @@ export default function LoginScreen() {
   }, [apiError]);
 
   const validateForm = () => {
-    const newErrors: {username?: string, password?: string} = {};
-    
+    const newErrors: { username?: string, password?: string } = {};
+
     if (!username.trim()) {
       newErrors.username = 'Nome de usuário é obrigatório';
     } else if (username.length < 3) {
       newErrors.username = 'Nome de usuário deve ter pelo menos 3 caracteres';
     }
-    
+
     if (!password) {
       newErrors.password = 'Senha é obrigatória';
     } else if (password.length < 3) {
       newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -53,27 +57,32 @@ export default function LoginScreen() {
   // O handleSubmit agora é assíncrono para esperar a chamada da API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Limpa mensagens de sucesso ou erros de API anteriores
     setSuccessMessage(null);
     setErrors({});
-    
+
     // Executa a validação do formulário
     if (!validateForm()) {
       return;
     }
-    
+
     // O estado de loading (apiLoading) será ativado automaticamente pelo hook
-    
+
     const userData = { username, password };
     const result = await callLoginApi(userData);
 
     // O hook retorna 1 em caso de sucesso (com base no seu service)
     if (result === 1) {
+      localStorage.setItem('isAuthenticated', 'true');
       setSuccessMessage('Login realizado com sucesso!');
       // Você pode adicionar um redirecionamento ou limpar o formulário aqui
       setUsername('');
       setPassword('');
+
+      setTimeout(() => {
+        navigate('/System');
+      }, 500);
     }
     // Se 'result' for 'null', o hook já definiu 'apiError',
     // e o useEffect acima cuidará de exibi-lo.
@@ -115,7 +124,7 @@ export default function LoginScreen() {
           </div>
 
           <div className="p-8">
-            
+
             {/* --- Mensagem de Erro da API --- */}
             {errors.api && (
               <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center animate-pulse" role="alert">
@@ -142,9 +151,8 @@ export default function LoginScreen() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className={`w-5 h-5 transition-colors ${
-                      focusedField === 'username' ? 'text-green-600' : 'text-gray-400'
-                    }`} />
+                    <User className={`w-5 h-5 transition-colors ${focusedField === 'username' ? 'text-green-600' : 'text-gray-400'
+                      }`} />
                   </div>
                   <input
                     type="text"
@@ -152,13 +160,12 @@ export default function LoginScreen() {
                     onChange={handleUsernameChange}
                     onFocus={() => setFocusedField('username')}
                     onBlur={() => setFocusedField(null)}
-                    className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none ${
-                      errors.username
+                    className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none ${errors.username
                         ? 'border-red-500 focus:border-red-600'
                         : focusedField === 'username'
-                        ? 'border-green-600'
-                        : 'border-gray-300 focus:border-green-600'
-                    }`}
+                          ? 'border-green-600'
+                          : 'border-gray-300 focus:border-green-600'
+                      }`}
                     placeholder="Digite seu usuário"
                     aria-invalid={!!errors.username}
                     aria-describedby="username-error"
@@ -178,9 +185,8 @@ export default function LoginScreen() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className={`w-5 h-5 transition-colors ${
-                      focusedField === 'password' ? 'text-green-600' : 'text-gray-400'
-                    }`} />
+                    <Lock className={`w-5 h-5 transition-colors ${focusedField === 'password' ? 'text-green-600' : 'text-gray-400'
+                      }`} />
                   </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -188,13 +194,12 @@ export default function LoginScreen() {
                     onChange={handlePasswordChange}
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
-                    className={`w-full pl-10 pr-12 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none ${
-                      errors.password
+                    className={`w-full pl-10 pr-12 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none ${errors.password
                         ? 'border-red-500 focus:border-red-600'
                         : focusedField === 'password'
-                        ? 'border-green-600'
-                        : 'border-gray-300 focus:border-green-600'
-                    }`}
+                          ? 'border-green-600'
+                          : 'border-gray-300 focus:border-green-600'
+                      }`}
                     placeholder="Digite sua senha"
                     aria-invalid={!!errors.password}
                     aria-describedby="password-error"
