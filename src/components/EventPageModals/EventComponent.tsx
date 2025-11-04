@@ -1,7 +1,7 @@
 import { Calendar, Clock, MapPin, Users, Trash2 } from "lucide-react"
 
-export default function EventComponent ({ key, titulo, descricao, data, hora, localizacao, numParticipante, maxParticipante, deleteFunction, clickFunction }:
-     { key: number, titulo: string, descricao: string, data: string, hora: string, localizacao: string, numParticipante: number, maxParticipante: number, deleteFunction: (e: any) => void, clickFunction: () => void }) {
+export default function EventComponent ({ key, titulo, descricao, data, hora, localizacao, deleteFunction, clickFunction }:
+     { key: number, titulo: string, descricao: string, data: string, hora: string, localizacao: string, deleteFunction: (e: any) => void, clickFunction: () => void }) {
     return (<div
         key={key}
         className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer transform hover:scale-[1.02]"
@@ -23,10 +23,6 @@ export default function EventComponent ({ key, titulo, descricao, data, hora, lo
                     <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-red-600" />
                         {localizacao}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-purple-600" />
-                        {numParticipante}/{maxParticipante}
                     </div>
                 </div>
             </div>

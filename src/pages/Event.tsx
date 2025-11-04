@@ -24,7 +24,6 @@ interface EventState extends completeEvent {
     title: string;
     description: string
     time: string;
-    maxParticipants: number;
     participants: completeParticipant[];
     status: 'upcoming' | 'completed' | 'cancelled' | string;
     date: string;
@@ -37,7 +36,6 @@ interface EventFormState {
     date: string;
     time: string;
     location: string;
-    maxParticipants: number;
 }
 
 interface ParticipantFormState {
@@ -105,7 +103,6 @@ export default function EventManagementSystem() {
         date: '',
         time: '',
         location: '',
-        maxParticipants: 0
     });
 
     const [participantForm, setParticipantForm] = useState<ParticipantFormState>({
@@ -130,7 +127,6 @@ export default function EventManagementSystem() {
                 id: event.idevent,
                 time: new Date(event.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                 participants: (event as EventState).participants || [],
-                maxParticipants: (event as EventState).maxParticipants || 100,
                 status: (event as EventState).status || 'upcoming'
             }));
             setEvents(mappedEvents);
@@ -172,7 +168,6 @@ export default function EventManagementSystem() {
                 ...newEventData,
                 id: newEventData.idevent,
                 time: eventForm.time,
-                maxParticipants: eventForm.maxParticipants,
                 participants: [],
                 status: 'upcoming'
             };
@@ -222,11 +217,6 @@ export default function EventManagementSystem() {
         setGlobalError(null);
         if (!selectedEvent || !participantForm.name || !participantForm.email || participantForm.eventId === null) {
             setGlobalError('Selecione um evento e preencha nome e email!');
-            return;
-        }
-
-        if (selectedEvent.participants.length >= selectedEvent.maxParticipants) {
-            setGlobalError('Evento já atingiu o número máximo de participantes!');
             return;
         }
 
@@ -317,7 +307,7 @@ export default function EventManagementSystem() {
 
     // --- Reset Forms ---
     const resetEventForm = () => {
-        setEventForm({ title: '', description: '', date: '', time: '', location: '', maxParticipants: 0 });
+        setEventForm({ title: '', description: '', date: '', time: '', location: ''});
     };
 
     const resetParticipantForm = () => {
@@ -415,8 +405,6 @@ export default function EventManagementSystem() {
                                         data={event.date}
                                         hora={event.time}
                                         localizacao={event.location}
-                                        numParticipante={event.participants.length}
-                                        maxParticipante={event.maxParticipants}
                                         deleteFunction={(e) => {
                                             e.stopPropagation();
                                             handleDeleteEvent(event.id);
@@ -479,7 +467,7 @@ export default function EventManagementSystem() {
                                 <Users className="w-6 h-6 text-purple-600" />
                                 <div>
                                     <p className="text-sm text-gray-600">Participantes</p>
-                                    <p className="font-semibold">{selectedEvent.participants.length}/{selectedEvent.maxParticipants}</p>
+                                    <p className="font-semibold">{selectedEvent.participants.length}</p>
                                 </div>
                             </div>
                         </div>
@@ -619,18 +607,6 @@ export default function EventManagementSystem() {
                                 onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
                                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 placeholder="Endereço do evento"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Máximo de Participantes *</label>
-                            <input
-                                type="number"
-                                value={eventForm.maxParticipants}
-                                onChange={(e) => setEventForm({ ...eventForm, maxParticipants: parseInt(e.target.value) || 0 })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
-                                placeholder="0"
-                                min={1}
                             />
                         </div>
 
