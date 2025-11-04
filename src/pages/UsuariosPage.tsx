@@ -1,20 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Search, Users, Mail, Shield, Calendar, Edit2, Trash2, UserPlus, Filter, AlertCircle } from 'lucide-react';
+import { Search, Users, Shield, Calendar, Edit2, Trash2, UserPlus, Filter, AlertCircle, CheckCircle } from 'lucide-react';
 import AddUserModal from '../components/AddUserModal';
 import EditUserModal from '../components/EditUserModal';
-
-interface User {
-    iduser: number;
-    username: string;
-    role: 'admin' | 'manager' | 'user';
-    status: 'active' | 'inactive';
-    department?: string;
-    createdAt?: string;
-    lastLogin?: string;
-    question?: string;
-    answer?: string;
-    isAdmin: boolean;
-}
+import { useListAllUsers } from '../hooks/userHooks/listAllUser.Hook';
+import { useCreateUser } from '../hooks/userHooks/createUser.Hook';
+import { useDeleteUser } from '../hooks/userHooks/deleteUser.Hook';
+import { useUpdateUser } from '../hooks/userHooks/updateUser.Hook';
+import { user } from '../interfaces/userInterfaces/user.Interface';
+import { createUser } from '../interfaces/userInterfaces/createUser.Interface';
+import { deleteUser } from '../interfaces/userInterfaces/deleteUser.Interface';
+import { updateUser } from '../interfaces/userInterfaces/updateUser.Interface';
 
 interface NewUser {
     username: string;
@@ -25,70 +20,64 @@ interface NewUser {
     isAdmin: boolean;
 }
 
-export default function UsuariosPage() {
-    const [users, setUsers] = useState<User[]>([
-        {
-            iduser: 1,
-            username: 'joao_silva',
-            role: 'admin',
-            status: 'active',
-            department: 'TI',
-            createdAt: '2025-01-15',
-            lastLogin: '2025-11-04',
-            question: 'Qual o nome do seu primeiro animal de estimação?',
-            answer: 'Rex',
-            isAdmin: true
-        },
-        {
-            iduser: 2,
-            username: 'maria_santos',
-            role: 'manager',
-            status: 'active',
-            department: 'Eventos',
-            createdAt: '2025-02-20',
-            lastLogin: '2025-11-03',
-            question: 'Em qual cidade você nasceu?',
-            answer: 'São Paulo',
-            isAdmin: false
-        },
-        {
-            iduser: 3,
-            username: 'pedro_costa',
-            role: 'user',
-            status: 'active',
-            department: 'Marketing',
-            createdAt: '2025-03-10',
-            lastLogin: '2025-11-02',
-            question: 'Qual o seu filme favorito?',
-            answer: 'Matrix',
-            isAdmin: false
-        },
-        {
-            iduser: 4,
-            username: 'ana_oliveira',
-            role: 'user',
-            status: 'inactive',
-            department: 'RH',
-            createdAt: '2025-04-05',
-            lastLogin: '2025-10-20',
-            question: 'Qual o nome da sua primeira escola?',
-            answer: 'Colégio Central',
-            isAdmin: false
-        },
-    ]);
+interface UserDisplay extends user {
+    role: 'admin' | 'user';
+    status: 'active' | 'inactive';
+    department?: string;
+    createdAt?: string;
+    lastLogin?: string;
+}
 
+export default function UsuariosPage() {
+    // Hooks
+    const { listAllUsers, users: fetchedUsers, loading: isLoadingList, error: fetchError } = useListAllUsers();
+    const { createUser: createUserMutation, loading: isCreating, error: createError } = useCreateUser();
+    const { deleteUser: deleteUserMutation, loading: isDeleting, error: deleteError } = useDeleteUser();
+    const { updateUser: updateUserMutation, loading: isUpdating, error: updateError } = useUpdateUser();
+
+    const [users, setUsers] = useState<UserDisplay[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<string>('all');
-    const [isLoading, setIsLoading] = useState(false);
     const [showAddUserModal, setShowAddUserModal] = useState(false);
     const [showEditUserModal, setShowEditUserModal] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedUser, setSelectedUser] = useState<any>(null);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
+    
+    // ✅ Estados de mensagem
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    // Carregar usuários ao montar o componente
     useEffect(() => {
-        // fetchUsers();
+        loadUsers();
     }, []);
+
+    // Atualizar estado local quando fetchedUsers mudar
+    useEffect(() => {
+        if (fetchedUsers && fetchedUsers.length > 0) {
+            const mappedUsers: UserDisplay[] = fetchedUsers.map(user => ({
+                ...user,
+                role: user.adm ? 'admin' : 'user',
+                status: 'active' as const,
+                department: '-',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString()
+            }));
+            setUsers(mappedUsers);
+        } else if (fetchedUsers && fetchedUsers.length === 0) {
+            setUsers([]);
+        }
+    }, [fetchedUsers]);
+
+    const loadUsers = async () => {
+        try {
+            console.log('Carregando usuários...');
+            await listAllUsers();
+        } catch (error) {
+            console.error('Erro ao carregar usuários:', error);
+        }
+    };
 
     const filteredUsers = users.filter(user => {
         const matchesSearch = 
@@ -102,63 +91,126 @@ export default function UsuariosPage() {
     });
 
     const handleAddUser = async (newUser: NewUser) => {
-        console.log('Criando usuário:', newUser);
-        
-        const user: User = {
-            iduser: users.length + 1,
-            username: newUser.username,
-            role: newUser.isAdmin ? 'admin' : 'user',
-            status: 'active',
-            department: 'Novo Departamento',
-            createdAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-            question: newUser.question,
-            answer: newUser.answer,
-            isAdmin: newUser.isAdmin
-        };
+        try {
+            console.log('=== CRIANDO USUÁRIO ===');
+            setSuccessMessage(null);
+            setErrorMessage(null);
+            
+            const userData: createUser = {
+                username: newUser.username,
+                password: newUser.password,
+                question: newUser.question,
+                answer: newUser.answer,
+                adm: newUser.isAdmin
+            };
 
-        setUsers([...users, user]);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+            const result = await createUserMutation(userData);
+            
+            if (result) {
+                console.log('Usuário criado com sucesso:', result);
+                setSuccessMessage(`Usuário "${newUser.username}" criado com sucesso!`);
+                
+                // Limpar mensagem após 4 segundos
+                setTimeout(() => setSuccessMessage(null), 4000);
+                
+                await loadUsers();
+                setShowAddUserModal(false);
+            } else if (createError) {
+                console.error('Erro ao criar:', createError);
+                setErrorMessage(`Erro ao criar usuário: ${createError}`);
+            }
+        } catch (error) {
+            console.error('Erro ao criar usuário:', error);
+            setErrorMessage('Erro ao criar usuário. Tente novamente.');
+        }
     };
 
-    const handleEditUser = async (updatedUser: User & { newPassword?: string }) => {
-        console.log('Editando usuário:', updatedUser);
-        
-        setUsers(users.map(u => 
-            u.iduser === updatedUser.iduser 
-                ? { 
-                    ...u, 
-                    username: updatedUser.username,
-                    question: updatedUser.question,
-                    answer: updatedUser.answer,
-                    isAdmin: updatedUser.isAdmin,
-                    role: updatedUser.isAdmin ? 'admin' : 'user'
-                  } 
-                : u
-        ));
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    const handleEditUser = async (updatedUser: any) => {
+        try {
+            console.log('=== EDITANDO USUÁRIO ===');
+            setSuccessMessage(null);
+            setErrorMessage(null);
+            
+            const userData: updateUser = {
+                id: updatedUser.iduser,
+                username: updatedUser.username,
+                adm: updatedUser.isAdmin
+            };
+
+            const result = await updateUserMutation(userData);
+            
+            if (result) {
+                console.log('Usuário atualizado com sucesso:', result);
+                setSuccessMessage(`Usuário "${updatedUser.username}" atualizado com sucesso!`);
+                
+                // Limpar mensagem após 4 segundos
+                setTimeout(() => setSuccessMessage(null), 4000);
+                
+                await loadUsers();
+                setShowEditUserModal(false);
+                setSelectedUser(null);
+            } else if (updateError) {
+                console.error('Erro ao atualizar:', updateError);
+                setErrorMessage(`Erro ao atualizar usuário: ${updateError}`);
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar usuário:', error);
+            setErrorMessage('Erro ao atualizar usuário. Tente novamente.');
+        }
     };
 
-    const confirmDeleteUser = (id: number) => {
-        setUsers(users.filter(u => u.iduser !== id));
-        setUserToDelete(null);
+    const confirmDeleteUser = async (id: number) => {
+        try {
+            console.log('=== EXCLUINDO USUÁRIO ===');
+            setSuccessMessage(null);
+            setErrorMessage(null);
+            
+            const userData: deleteUser = { id };
+            
+            await deleteUserMutation(userData);
+            
+            console.log('=== USUÁRIO EXCLUÍDO COM SUCESSO ===');
+            setSuccessMessage('Usuário excluído com sucesso!');
+            
+            // Limpar mensagem após 4 segundos
+            setTimeout(() => setSuccessMessage(null), 4000);
+            
+            await loadUsers();
+            setUserToDelete(null);
+            
+        } catch (error) {
+            console.error('=== ERRO AO EXCLUIR USUÁRIO ===');
+            console.error('Erro:', error);
+            
+            let errorMsg = 'Erro ao excluir usuário.';
+            if (error instanceof Error) {
+                errorMsg = error.message;
+            }
+            if (deleteError) {
+                errorMsg = deleteError;
+            }
+            
+            setErrorMessage(errorMsg);
+            setUserToDelete(null);
+        }
     };
 
-    const openEditModal = (user: User) => {
-        setSelectedUser(user);
+    const openEditModal = (user: UserDisplay) => {
+        setSelectedUser({
+            iduser: user.id,
+            username: user.username,
+            isAdmin: user.adm
+        });
         setShowEditUserModal(true);
     };
 
     const getRoleBadge = (role: string) => {
         const badges = {
             admin: 'bg-red-100 text-red-800',
-            manager: 'bg-blue-100 text-blue-800',
             user: 'bg-gray-100 text-gray-800'
         };
         const labels = {
             admin: 'Administrador',
-            manager: 'Gerente',
             user: 'Usuário'
         };
         return { class: badges[role as keyof typeof badges], label: labels[role as keyof typeof labels] };
@@ -170,8 +222,45 @@ export default function UsuariosPage() {
             : { class: 'bg-gray-100 text-gray-800', label: 'Inativo' };
     };
 
+    const isLoading = isLoadingList || isCreating || isDeleting || isUpdating;
+    const currentError = fetchError || createError || deleteError || updateError;
+
     return (
         <div className="max-w-7xl mx-auto">
+            {/* Mensagem de Sucesso */}
+            {successMessage && (
+                <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <p className="text-sm font-semibold text-green-800">Sucesso!</p>
+                        <p className="text-xs text-green-700 mt-1">{successMessage}</p>
+                    </div>
+                    <button
+                        onClick={() => setSuccessMessage(null)}
+                        className="text-green-600 hover:text-green-800 transition-all"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
+            {/* Mensagem de Erro */}
+            {errorMessage && (
+                <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <p className="text-sm font-semibold text-red-800">Erro</p>
+                        <p className="text-xs text-red-700 mt-1">{errorMessage}</p>
+                    </div>
+                    <button
+                        onClick={() => setErrorMessage(null)}
+                        className="text-red-600 hover:text-red-800 transition-all"
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -181,10 +270,15 @@ export default function UsuariosPage() {
                     </div>
                     <button 
                         onClick={() => setShowAddUserModal(true)}
-                        className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:from-green-700 hover:to-green-800 transition-all flex items-center gap-2"
+                        disabled={isCreating}
+                        className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all flex items-center gap-2 ${
+                            isCreating
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                        }`}
                     >
                         <UserPlus className="w-5 h-5" />
-                        Novo Usuário
+                        {isCreating ? 'Criando...' : 'Novo Usuário'}
                     </button>
                 </div>
 
@@ -216,7 +310,7 @@ export default function UsuariosPage() {
                             <div>
                                 <p className="text-sm text-red-600 font-medium">Admins</p>
                                 <p className="text-2xl font-bold text-red-900">
-                                    {users.filter(u => u.role === 'admin').length}
+                                    {users.filter(u => u.adm).length}
                                 </p>
                             </div>
                         </div>
@@ -225,9 +319,9 @@ export default function UsuariosPage() {
                         <div className="flex items-center gap-3">
                             <Users className="w-8 h-8 text-purple-600" />
                             <div>
-                                <p className="text-sm text-purple-600 font-medium">Gerentes</p>
+                                <p className="text-sm text-purple-600 font-medium">Usuários</p>
                                 <p className="text-2xl font-bold text-purple-900">
-                                    {users.filter(u => u.role === 'manager').length}
+                                    {users.filter(u => !u.adm).length}
                                 </p>
                             </div>
                         </div>
@@ -240,7 +334,7 @@ export default function UsuariosPage() {
                         <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
                             type="text"
-                            placeholder="Buscar por username ou departamento..."
+                            placeholder="Buscar por username..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
@@ -256,7 +350,6 @@ export default function UsuariosPage() {
                         >
                             <option value="all">Todas as Funções</option>
                             <option value="admin">Administrador</option>
-                            <option value="manager">Gerente</option>
                             <option value="user">Usuário</option>
                         </select>
                     </div>
@@ -274,6 +367,14 @@ export default function UsuariosPage() {
                         </select>
                     </div>
                 </div>
+
+                {/* Erro Geral ao Carregar */}
+                {currentError && (
+                    <div className="mt-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5" />
+                        <span>Erro: {currentError}</span>
+                    </div>
+                )}
             </div>
 
             {/* Mensagem de Confirmação de Exclusão */}
@@ -283,18 +384,24 @@ export default function UsuariosPage() {
                     <div className="flex-1">
                         <p className="text-sm font-semibold text-red-800">Confirmar exclusão</p>
                         <p className="text-xs text-red-700 mt-1">
-                            Tem certeza que deseja excluir o usuário <strong>{users.find(u => u.iduser === userToDelete)?.username}</strong>? Esta ação não pode ser desfeita.
+                            Tem certeza que deseja excluir o usuário <strong>{users.find(u => u.id === userToDelete)?.username}</strong>? Esta ação não pode ser desfeita.
                         </p>
                         <div className="flex gap-2 mt-3">
                             <button
                                 onClick={() => confirmDeleteUser(userToDelete)}
-                                className="px-3 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-all"
+                                disabled={isDeleting}
+                                className={`px-3 py-1.5 text-xs rounded transition-all ${
+                                    isDeleting
+                                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                                        : 'bg-red-600 text-white hover:bg-red-700'
+                                }`}
                             >
-                                Sim, excluir
+                                {isDeleting ? 'Excluindo...' : 'Sim, excluir'}
                             </button>
                             <button
                                 onClick={() => setUserToDelete(null)}
-                                className="px-3 py-1.5 text-xs border border-red-600 text-red-700 rounded hover:bg-red-50 transition-all"
+                                disabled={isDeleting}
+                                className="px-3 py-1.5 text-xs border border-red-600 text-red-700 rounded hover:bg-red-50 transition-all disabled:opacity-50"
                             >
                                 Cancelar
                             </button>
@@ -305,15 +412,20 @@ export default function UsuariosPage() {
 
             {/* Tabela de Usuários */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                {isLoading ? (
+                {isLoadingList ? (
                     <div className="text-center p-12 text-gray-500">
-                        Carregando usuários...
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
+                        <p>Carregando usuários...</p>
                     </div>
                 ) : filteredUsers.length === 0 ? (
                     <div className="text-center p-12 text-gray-500">
                         <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                         <p className="text-lg font-semibold">Nenhum usuário encontrado</p>
-                        <p className="text-sm mt-2">Tente ajustar os filtros de pesquisa</p>
+                        <p className="text-sm mt-2">
+                            {users.length === 0 
+                                ? 'Adicione o primeiro usuário clicando no botão acima' 
+                                : 'Tente ajustar os filtros de pesquisa'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -322,9 +434,8 @@ export default function UsuariosPage() {
                                 <tr>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Username</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Função</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold">Departamento</th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold">Pergunta Segurança</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
-                                    <th className="px-6 py-4 text-left text-sm font-semibold">Último Login</th>
                                     <th className="px-6 py-4 text-center text-sm font-semibold">Ações</th>
                                 </tr>
                             </thead>
@@ -335,7 +446,7 @@ export default function UsuariosPage() {
                                     
                                     return (
                                         <tr 
-                                            key={user.iduser}
+                                            key={user.id}
                                             className={`hover:bg-gray-50 transition-colors ${
                                                 index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                                             }`}
@@ -355,7 +466,7 @@ export default function UsuariosPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="text-gray-700">{user.department || '-'}</span>
+                                                <span className="text-gray-700 text-sm">{user.question}</span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusBadge.class}`}>
@@ -363,23 +474,19 @@ export default function UsuariosPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                                    <Calendar className="w-4 h-4 text-gray-400" />
-                                                    {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : '-'}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
                                                 <div className="flex justify-center gap-2">
                                                     <button
                                                         onClick={() => openEditModal(user)}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                        disabled={isUpdating}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-50"
                                                         title="Editar usuário"
                                                     >
                                                         <Edit2 className="w-4 h-4" />
                                                     </button>
                                                     <button
-                                                        onClick={() => setUserToDelete(user.iduser)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                        onClick={() => setUserToDelete(user.id)}
+                                                        disabled={isDeleting}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
                                                         title="Remover usuário"
                                                     >
                                                         <Trash2 className="w-4 h-4" />

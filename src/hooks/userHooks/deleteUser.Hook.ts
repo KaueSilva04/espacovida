@@ -3,27 +3,26 @@ import { deleteUserService } from '../../services/userServices/deleteUser.Servic
 import { deleteUser } from '../../interfaces/userInterfaces/deleteUser.Interface'; 
 
 export const useDeleteUser = () => {
-   
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-  
     const deleteUserMutation = async (userToDelete: deleteUser): Promise<void> => {
         try {
             setLoading(true);
             setError(null);
             
-            // Chama o service que faz a requisição DELETE com o JSON body.
+            console.log('Hook - Chamando service com:', userToDelete);
+            
             await deleteUserService.deleteUser(userToDelete);
             
-            // Se chegou aqui, a operação foi bem-sucedida.
+            console.log('Hook - Usuário deletado com sucesso');
             
         } catch (err) {
-            // Captura o erro, define o estado de erro e propaga (lança) o erro.
             const errorMessage = err instanceof Error 
                 ? err.message 
-                : 'An error occurred while deleting the participant';
+                : 'Erro ao deletar usuário';
             setError(errorMessage);
+            console.error('Hook - Erro:', errorMessage);
             throw err; 
         } finally {
             setLoading(false);
