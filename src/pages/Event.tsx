@@ -8,10 +8,12 @@ import { useCreateEvent } from '../hooks/eventHooks/createEvent.Hook';
 import { useDeleteEvent } from '../hooks/eventHooks/deleteEvent.Hook';
 import { useGetAllEvent } from '../hooks/eventHooks/getAllEvent.Hook';
 import { useGetAllParticipantByEvent } from '../hooks/eventHooks/getAllParticipantsByEvent.hook';
+import { useDeleteParticipant } from '../hooks/participantHooks/deleteParticipant.Hook';
 import { createEvent } from '../interfaces/eventInterfaces/createEvent.Interface';
 import { completeEvent } from '../interfaces/eventInterfaces/completeEvent.Interface'
 import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook';
 import { newParticipant as NewParticipantInterface } from '../interfaces/participantInterfaces/newParticipant.Interface';
+import { deleteParticipantInterface } from '../interfaces/participantInterfaces/deleteParticipant.Interface';
 import EventComponent from '../components/EventPageModals/EventComponent';
 import completeParticipant from '../interfaces/participantInterfaces/completeParticipant.Interface';
 
@@ -63,6 +65,7 @@ export default function EventManagementSystem() {
     const { getAllEvent: fetchEvents, data: fetchedEvents, isLoading: isFetching, error: fetchError } = useGetAllEvent();
     const { createParticipant: createParticipantMutation, loading: isAddingParticipant, error: addParticipantError } = useNewParticipant();
     const { getAllParticipantByEvent: getAllParticipantByEventMutation, isLoading: isGettingParticipantByEvent, error: getParticipantByEventError } = useGetAllParticipantByEvent();
+    const { deleteParticipant: deleteParticipantMutation, isLoading: isDeletingParticipant, error: deleteParticipantError } = useDeleteParticipant();
 
     // --- Estados de Navegação ---
     const [currentView, setCurrentView] = useState<'eventos' | 'participantes' | 'usuarios' | 'perfil'>('eventos');
@@ -86,6 +89,8 @@ export default function EventManagementSystem() {
     const [showEventModal, setShowEventModal] = useState<boolean>(false);
     const [showParticipantModal, setShowParticipantModal] = useState<boolean>(false);
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+    const [showDeleteParticipantModal, setShowDeleteParticipantModal] = useState<boolean>(false)
+    const [participantIdToRemove, setParticipantIdToRemove] = useState<number>(-1)
     const [eventToDeleteId, setEventToDeleteId] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -266,7 +271,22 @@ export default function EventManagementSystem() {
     const handleRemoveParticipant = (participantId: number) => {
         if (!selectedEvent) return;
 
-        if (window.confirm('Remover este participante?')) {
+        const data: deleteParticipantInterface = {
+            idparticipant: participantId,
+            eventId: selectedEvent.id
+        };
+
+        try {
+            const result = deleteParticipantMutation(data)
+
+            if (!result) {
+                throw new Error("Erro ao excluir participante")
+            }
+
+            if (deleteParticipantError) {
+                throw new Error(`Erro ao excluir participante: ${deleteParticipantError}`)
+            }
+
             const updatedEvents = events.map(event => {
                 if (event.id === selectedEvent.id) {
                     return { ...event, participants: event.participants.filter(p => p.idparticipant !== participantId) };
@@ -276,6 +296,9 @@ export default function EventManagementSystem() {
 
             setEvents(updatedEvents);
             setSelectedEvent(prev => prev ? { ...prev, participants: prev.participants.filter(p => p.idparticipant !== participantId) } : null);
+            setShowDeleteParticipantModal(false)
+        } catch (e) {
+            setGlobalError(addParticipantError || (e instanceof Error ? e.message : 'Um erro ocorreu ao adicionar o participante.'));
         }
     };
 
@@ -492,7 +515,9 @@ export default function EventManagementSystem() {
                         </div>
 
                         <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                            {selectedEvent.participants.length === 0 ? (
+                            {isGettingParticipantByEvent || isDeletingParticipant ? (
+                                <p className="text-gray-500 text-center py-8">Carregando...</p>
+                            ) : selectedEvent.participants.length === 0 ? (
                                 <p className="text-gray-500 text-center py-8">Nenhum participante cadastrado</p>
                             ) : (
                                 selectedEvent.participants.map(participant => (
@@ -506,7 +531,10 @@ export default function EventManagementSystem() {
                                             <p className="text-sm text-gray-600">{participant.phone}</p>
                                         </div>
                                         <button
-                                            onClick={() => handleRemoveParticipant(participant.idparticipant)}
+                                            onClick={() => {
+                                                setParticipantIdToRemove(participant.idparticipant)
+                                                setShowDeleteParticipantModal(true)
+                                            }}
                                             className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
                                         >
                                             <Trash2 className="w-5 h-5" />
@@ -721,6 +749,39 @@ export default function EventManagementSystem() {
                                     }`}
                             >
                                 {isAddingParticipant ? 'Adicionando...' : 'Adicionar'}
+                            </button>
+                        </div>
+                    </div>
+                </ModalComponent>
+            )}
+
+            {/* Delete participant */}
+            {showDeleteParticipantModal && (
+                <ModalComponent Titulo='Confirmação de Exclusão' OnClickClose={() => setShowDeleteParticipantModal(false)} width='500px' height=''>
+                    <div className="p-6 space-y-4">
+                        <p className="text-gray-700">
+                            Tem certeza que deseja <strong className="font-bold text-red-600">excluir</strong> este participante? Esta ação não pode ser desfeita.
+                        </p>
+
+                        <div className="flex gap-4 pt-4">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteParticipantModal(false);
+                                }}
+                                disabled={isDeleting}
+                                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={() => { handleRemoveParticipant(participantIdToRemove) }}
+                                disabled={isDeletingParticipant}
+                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isDeletingParticipant
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-red-600 hover:bg-red-700'
+                                    }`}
+                            >
+                                {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
                             </button>
                         </div>
                     </div>
