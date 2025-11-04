@@ -33,7 +33,6 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
     const [errors, setErrors] = useState<Partial<Record<keyof NewUser, string>>>({});
     const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
 
-    // Lista de perguntas de segurança sugeridas
     const securityQuestions = [
         'Qual o nome do seu primeiro animal de estimação?',
         'Em qual cidade você nasceu?',
@@ -45,13 +44,11 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
         'Qual o nome do seu melhor amigo de infância?'
     ];
 
-    // Validação de username
     const validateUsername = (username: string): boolean => {
         const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
         return usernameRegex.test(username);
     };
 
-    // Validação de senha forte
     const validatePasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
         const hasUpperCase = /[A-Z]/.test(password);
         const hasLowerCase = /[a-z]/.test(password);
@@ -66,7 +63,6 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
         return 'strong';
     };
 
-    // Atualizar força da senha
     const handlePasswordChange = (password: string) => {
         setFormData({ ...formData, password });
         if (password) {
@@ -76,7 +72,6 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
         }
     };
 
-    // Validação do formulário
     const validateForm = (): boolean => {
         const newErrors: Partial<Record<keyof NewUser, string>> = {};
 
@@ -170,7 +165,8 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
             height=""
         >
             <div className="p-6">
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
+                {/* ✅ BARRA DE ROLAGEM ADICIONADA */}
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4 max-h-[500px] overflow-y-auto pr-4">
                     {/* Username */}
                     <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -232,7 +228,6 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                             </p>
                         )}
                         
-                        {/* Indicador de Força da Senha */}
                         {formData.password && (
                             <div className="mt-2">
                                 <div className="flex items-center justify-between mb-1">
