@@ -9,6 +9,7 @@ import Donate from './pages/Donate';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
 import System from './pages/Event';
+import { ProtectedRoute } from './components/layout/ProtectedRoute';
 
 function AppContent() {
   const nonLayoutPages = ['/login', '/System']
@@ -27,7 +28,8 @@ function AppContent() {
           <Route path="/doe" element={<Donate />} />
           <Route path="/contato" element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/system" element={<System/>} />
+          <Route path="/system" element={<ProtectedRoute element={<System />} />} />
+
           <Route
             path="*"
             element={

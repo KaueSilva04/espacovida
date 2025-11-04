@@ -1,39 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/auth.Hook';
 
-// Função que checa sessão no backend
-async function checkSession() {
-  try {
-    const res = await fetch('http://localhost:5000/user/session', {
-      method: 'GET',
-      credentials: 'include', // envia cookies HttpOnly automaticamente
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.user; // { id, email, adm }
-  } catch (err) {
-    return null;
-  }
+interface ProtectedRouteProps {
+  element: JSX.Element;
 }
 
-function ProtectedRoute({ requireAdmin = false }) {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ element }) => {
+  const { checkAuth } = useAuth();
+  const [isAuth, setIsAuth] = useState<boolean | null>(null);
 
   useEffect(() => {
-    async function verify() {
-      const currentUser = await checkSession();
-      setUser(currentUser);
-      setLoading(false);
-    }
-    verify();
+    (async () => {
+      const logged = await checkAuth();
+      setIsAuth(logged);
+    })();
   }, []);
 
-  if (loading) return <div>Carregando...</div>; // opcional, enquanto checa a sessão
-  if (!user) return <Navigate to="/login" />; // não autenticado
-  if (requireAdmin && !user.adm) return <Navigate to="/login" />; // precisa ser admin
+  if (isAuth === null) return <div>Carregando...</div>; 
 
-  return <Outlet />; // libera a rota
-}
-
-export default ProtectedRoute;
+  return isAuth ? element : <Navigate to="/login" replace />;
+};

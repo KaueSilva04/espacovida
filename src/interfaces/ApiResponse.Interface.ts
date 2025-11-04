@@ -4,4 +4,4 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-export default ApiResponse
+export default ApiResponse;
