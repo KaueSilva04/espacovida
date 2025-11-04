@@ -1,56 +1,33 @@
-import { useState, useEffect } from 'react';
-import { User, Lock, Eye, EyeOff, AlertCircle, CheckCircle, HelpCircle, Shield, Save, X } from 'lucide-react';
+import { useState } from 'react';
+import { User, Lock, Eye, EyeOff, AlertCircle, CheckCircle, Shield, Save, X } from 'lucide-react';
 import ModalComponent from './Modal';
 
-interface UserData {
-    iduser: number;
+interface NewUser {
     username: string;
-    question: string;
-    answer: string;
+    password: string;
+    confirmPassword: string;
     isAdmin: boolean;
 }
 
-interface EditUserModalProps {
+interface AddUserModalProps {
     isOpen: boolean;
     onClose: () => void;
-    userData: UserData | null;
-    onSave?: (user: UserData & { newPassword?: string }) => Promise<void>;
+    onSave?: (user: NewUser) => Promise<void>;
 }
 
-export default function EditUserModal({ isOpen, onClose, userData, onSave }: EditUserModalProps) {
-    const [formData, setFormData] = useState<UserData>({
-        iduser: 0,
+export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalProps) {
+    const [formData, setFormData] = useState<NewUser>({
         username: '',
-        question: '',
-        answer: '',
+        password: '',
+        confirmPassword: '',
         isAdmin: false
     });
 
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [changePassword, setChangePassword] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+    const [errors, setErrors] = useState<Partial<Record<keyof NewUser, string>>>({});
     const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
-
-    const securityQuestions = [
-        'Qual o nome do seu primeiro animal de estimação?',
-        'Em qual cidade você nasceu?',
-        'Qual o nome de solteira da sua mãe?',
-        'Qual era o nome da sua primeira escola?',
-        'Qual o seu filme favorito?',
-        'Qual o nome da rua onde você cresceu?',
-        'Qual o seu livro favorito?',
-        'Qual o nome do seu melhor amigo de infância?'
-    ];
-
-    useEffect(() => {
-        if (userData) {
-            setFormData(userData);
-        }
-    }, [userData]);
 
     const validateUsername = (username: string): boolean => {
         const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
@@ -72,7 +49,7 @@ export default function EditUserModal({ isOpen, onClose, userData, onSave }: Edi
     };
 
     const handlePasswordChange = (password: string) => {
-        setNewPassword(password);
+        setFormData({ ...formData, password });
         if (password) {
             setPasswordStrength(validatePasswordStrength(password));
         } else {
@@ -81,7 +58,7 @@ export default function EditUserModal({ isOpen, onClose, userData, onSave }: Edi
     };
 
     const validateForm = (): boolean => {
-        const newErrors: Record<string, string> = {};
+        const newErrors: Partial<Record<keyof NewUser, string>> = {};
 
         if (!formData.username.trim()) {
             newErrors.username = 'Username é obrigatório';
@@ -89,26 +66,16 @@ export default function EditUserModal({ isOpen, onClose, userData, onSave }: Edi
             newErrors.username = 'Username deve ter 3-20 caracteres (letras, números e _)';
         }
 
-        if (changePassword) {
-            if (!newPassword) {
-                newErrors.newPassword = 'Nova senha é obrigatória';
-            } else if (newPassword.length < 8) {
-                newErrors.newPassword = 'Senha deve ter no mínimo 8 caracteres';
-            }
-
-            if (!confirmPassword) {
-                newErrors.confirmPassword = 'Confirme a nova senha';
-            } else if (newPassword !== confirmPassword) {
-                newErrors.confirmPassword = 'As senhas não coincidem';
-            }
+        if (!formData.password) {
+            newErrors.password = 'Senha é obrigatória';
+        } else if (formData.password.length < 8) {
+            newErrors.password = 'Senha deve ter no mínimo 8 caracteres';
         }
 
-        if (!formData.question.trim()) {
-            newErrors.question = 'Pergunta de segurança é obrigatória';
-        }
-
-        if (!formData.answer.trim()) {
-            newErrors.answer = 'Resposta é obrigatória';
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = 'Confirme a senha';
+        } else if (formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = 'As senhas não coincidem';
         }
 
         setErrors(newErrors);
@@ -121,24 +88,23 @@ export default function EditUserModal({ isOpen, onClose, userData, onSave }: Edi
         setIsSaving(true);
         try {
             if (onSave) {
-                const dataToSave = {
-                    ...formData,
-                    ...(changePassword && newPassword ? { newPassword } : {})
-                };
-                await onSave(dataToSave);
+                await onSave(formData);
             }
             handleClose();
         } catch (error) {
-            console.error('Erro ao atualizar usuário:', error);
+            console.error('Erro ao criar usuário:', error);
         } finally {
             setIsSaving(false);
         }
     };
 
     const handleClose = () => {
-        setNewPassword('');
-        setConfirmPassword('');
-        setChangePassword(false);
+        setFormData({
+            username: '',
+            password: '',
+            confirmPassword: '',
+            isAdmin: false
+        });
         setErrors({});
         setPasswordStrength(null);
         onClose();
@@ -162,17 +128,17 @@ export default function EditUserModal({ isOpen, onClose, userData, onSave }: Edi
         }
     };
 
-    if (!isOpen || !userData) return null;
+    if (!isOpen) return null;
 
     return (
         <ModalComponent
-            Titulo="Editar Usuário"
+            Titulo="Adicionar Novo Usuário"
             OnClickClose={handleClose}
-            width="550px"
+            width="400px"
             height=""
         >
             <div className="p-6">
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                     {/* Username */}
                     <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -198,171 +164,96 @@ export default function EditUserModal({ isOpen, onClose, userData, onSave }: Edi
                         )}
                     </div>
 
-                    {/* Alterar Senha */}
-                    <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={changePassword}
-                                onChange={(e) => setChangePassword(e.target.checked)}
-                                className="w-4 h-4 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                            />
-                            <div className="flex items-center gap-2">
-                                <Lock className="w-4 h-4 text-blue-600" />
-                                <span className="text-sm font-semibold text-gray-800">
-                                    Alterar senha
-                                </span>
-                            </div>
-                        </label>
-                    </div>
-
-                    {/* Campos de Senha (aparecem apenas se checkbox marcado) */}
-                    {changePassword && (
-                        <>
-                            {/* Nova Senha */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <Lock className="w-4 h-4 text-green-600" />
-                                    Nova Senha *
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={newPassword}
-                                        onChange={(e) => handlePasswordChange(e.target.value)}
-                                        className={`w-full px-4 py-2.5 pr-10 text-sm border-2 rounded-lg transition-all focus:outline-none ${
-                                            errors.newPassword 
-                                                ? 'border-red-500 focus:border-red-500' 
-                                                : 'border-gray-300 focus:border-green-600'
-                                        }`}
-                                        placeholder="Mínimo 8 caracteres"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                                    >
-                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                    </button>
-                                </div>
-                                {errors.newPassword && (
-                                    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-                                        <AlertCircle className="w-3 h-3" />
-                                        {errors.newPassword}
-                                    </p>
-                                )}
-                                
-                                {newPassword && (
-                                    <div className="mt-2">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="text-xs text-gray-600">Força da senha:</span>
-                                            <span className={`text-xs font-semibold ${
-                                                passwordStrength === 'weak' ? 'text-red-600' :
-                                                passwordStrength === 'medium' ? 'text-yellow-600' :
-                                                'text-green-600'
-                                            }`}>
-                                                {passwordStrength === 'weak' ? 'Fraca' :
-                                                 passwordStrength === 'medium' ? 'Média' : 'Forte'}
-                                            </span>
-                                        </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2">
-                                            <div className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()} ${getPasswordStrengthWidth()}`}></div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Confirmar Nova Senha */}
-                            <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <Lock className="w-4 h-4 text-green-600" />
-                                    Confirmar Nova Senha *
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={showConfirmPassword ? 'text' : 'password'}
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className={`w-full px-4 py-2.5 pr-10 text-sm border-2 rounded-lg transition-all focus:outline-none ${
-                                            errors.confirmPassword 
-                                                ? 'border-red-500 focus:border-red-500' 
-                                                : 'border-gray-300 focus:border-green-600'
-                                        }`}
-                                        placeholder="Digite a senha novamente"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                                    >
-                                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                    </button>
-                                </div>
-                                {errors.confirmPassword && (
-                                    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
-                                        <AlertCircle className="w-3 h-3" />
-                                        {errors.confirmPassword}
-                                    </p>
-                                )}
-                                {newPassword && confirmPassword && newPassword === confirmPassword && (
-                                    <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-                                        <CheckCircle className="w-3 h-3" />
-                                        As senhas coincidem
-                                    </p>
-                                )}
-                            </div>
-                        </>
-                    )}
-
-                    {/* Pergunta de Segurança */}
+                    {/* Senha */}
                     <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                            <HelpCircle className="w-4 h-4 text-green-600" />
-                            Pergunta de Segurança *
+                            <Lock className="w-4 h-4 text-green-600" />
+                            Senha *
                         </label>
-                        <select
-                            value={formData.question}
-                            onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-                            className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg transition-all focus:outline-none bg-white ${
-                                errors.question 
-                                    ? 'border-red-500 focus:border-red-500' 
-                                    : 'border-gray-300 focus:border-green-600'
-                            }`}
-                        >
-                            <option value="">Selecione uma pergunta</option>
-                            {securityQuestions.map((q, index) => (
-                                <option key={index} value={q}>{q}</option>
-                            ))}
-                        </select>
-                        {errors.question && (
+                        <div className="relative">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                value={formData.password}
+                                onChange={(e) => handlePasswordChange(e.target.value)}
+                                className={`w-full px-4 py-2.5 pr-10 text-sm border-2 rounded-lg transition-all focus:outline-none ${
+                                    errors.password 
+                                        ? 'border-red-500 focus:border-red-500' 
+                                        : 'border-gray-300 focus:border-green-600'
+                                }`}
+                                placeholder="Mínimo 8 caracteres"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
+                        {errors.password && (
                             <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                                 <AlertCircle className="w-3 h-3" />
-                                {errors.question}
+                                {errors.password}
                             </p>
+                        )}
+                        
+                        {/* Indicador de Força da Senha */}
+                        {formData.password && (
+                            <div className="mt-2">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs text-gray-600">Força:</span>
+                                    <span className={`text-xs font-semibold ${
+                                        passwordStrength === 'weak' ? 'text-red-600' :
+                                        passwordStrength === 'medium' ? 'text-yellow-600' :
+                                        'text-green-600'
+                                    }`}>
+                                        {passwordStrength === 'weak' ? 'Fraca' :
+                                         passwordStrength === 'medium' ? 'Média' : 'Forte'}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()} ${getPasswordStrengthWidth()}`}></div>
+                                </div>
+                            </div>
                         )}
                     </div>
 
-                    {/* Resposta */}
+                    {/* Confirmar Senha */}
                     <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                            <HelpCircle className="w-4 h-4 text-green-600" />
-                            Resposta *
+                            <Lock className="w-4 h-4 text-green-600" />
+                            Confirmar Senha *
                         </label>
-                        <input
-                            type="text"
-                            value={formData.answer}
-                            onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
-                            className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg transition-all focus:outline-none ${
-                                errors.answer 
-                                    ? 'border-red-500 focus:border-red-500' 
-                                    : 'border-gray-300 focus:border-green-600'
-                            }`}
-                            placeholder="Digite sua resposta"
-                        />
-                        {errors.answer && (
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                value={formData.confirmPassword}
+                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                className={`w-full px-4 py-2.5 pr-10 text-sm border-2 rounded-lg transition-all focus:outline-none ${
+                                    errors.confirmPassword 
+                                        ? 'border-red-500 focus:border-red-500' 
+                                        : 'border-gray-300 focus:border-green-600'
+                                }`}
+                                placeholder="Digite a senha novamente"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            >
+                                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
+                        {errors.confirmPassword && (
                             <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                                 <AlertCircle className="w-3 h-3" />
-                                {errors.answer}
+                                {errors.confirmPassword}
+                            </p>
+                        )}
+                        {formData.password && formData.confirmPassword && formData.password === formData.confirmPassword && (
+                            <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3" />
+                                As senhas coincidem
                             </p>
                         )}
                     </div>
@@ -378,14 +269,9 @@ export default function EditUserModal({ isOpen, onClose, userData, onSave }: Edi
                             />
                             <div className="flex items-center gap-2">
                                 <Shield className={`w-5 h-5 ${formData.isAdmin ? 'text-red-600' : 'text-gray-400'}`} />
-                                <div>
-                                    <span className="text-sm font-semibold text-gray-800">
-                                        Administrador
-                                    </span>
-                                    <p className="text-xs text-gray-600">
-                                        Concede privilégios administrativos ao usuário
-                                    </p>
-                                </div>
+                                <span className="text-sm font-semibold text-gray-800">
+                                    Administrador
+                                </span>
                             </div>
                         </label>
                     </div>
@@ -411,7 +297,7 @@ export default function EditUserModal({ isOpen, onClose, userData, onSave }: Edi
                         }`}
                     >
                         <Save className="w-4 h-4" />
-                        {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                        {isSaving ? 'Salvando...' : 'Criar Usuário'}
                     </button>
                 </div>
             </div>
