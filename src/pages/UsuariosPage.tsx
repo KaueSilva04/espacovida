@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Users, Shield, Calendar, Edit2, Trash2, UserPlus, Filter, AlertCircle, CheckCircle } from 'lucide-react';
+import { Search, Users, Shield, Trash2, UserPlus, Filter, AlertCircle, CheckCircle } from 'lucide-react';
 import AddUserModal from '../components/AddUserModal';
 import { useListAllUsers } from '../hooks/userHooks/listAllUser.Hook';
 import { useCreateUser } from '../hooks/userHooks/createUser.Hook';
@@ -7,7 +7,6 @@ import { useDeleteUser } from '../hooks/userHooks/deleteUser.Hook';
 import { user } from '../interfaces/userInterfaces/user.Interface';
 import { createUser } from '../interfaces/userInterfaces/createUser.Interface';
 import { deleteUser } from '../interfaces/userInterfaces/deleteUser.Interface';
-
 
 interface UserDisplay extends user {
     role: 'admin' | 'user';
@@ -17,13 +16,11 @@ interface UserDisplay extends user {
     lastLogin?: string;
 }
 
-
 export default function UsuariosPage() {
     // Hooks
     const { listAllUsers, users: fetchedUsers, loading: isLoadingList, error: fetchError } = useListAllUsers();
     const { createUser: createUserMutation, loading: isCreating, error: createError } = useCreateUser();
     const { deleteUser: deleteUserMutation, loading: isDeleting, error: deleteError } = useDeleteUser();
-
 
     const [users, setUsers] = useState<UserDisplay[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -32,16 +29,14 @@ export default function UsuariosPage() {
     const [showAddUserModal, setShowAddUserModal] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
     
-    // ✅ Estados de mensagem
+    // Estados de mensagem
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
 
     // Carregar usuários ao montar o componente
     useEffect(() => {
         loadUsers();
     }, []);
-
 
     // Atualizar estado local quando fetchedUsers mudar
     useEffect(() => {
@@ -60,7 +55,6 @@ export default function UsuariosPage() {
         }
     }, [fetchedUsers]);
 
-
     const loadUsers = async () => {
         try {
             console.log('Carregando usuários...');
@@ -69,7 +63,6 @@ export default function UsuariosPage() {
             console.error('Erro ao carregar usuários:', error);
         }
     };
-
 
     const filteredUsers = users.filter(user => {
         const matchesSearch = 
@@ -82,41 +75,47 @@ export default function UsuariosPage() {
         return matchesSearch && matchesRole && matchesStatus;
     });
 
-
     const handleAddUser = async (newUser: any) => {
         try {
-            console.log('=== CRIANDO USUÁRIO ===');
+            console.log('=== PAGE - CRIANDO USUÁRIO ===');
+            console.log('newUser recebido:', newUser);
+            
             setSuccessMessage(null);
             setErrorMessage(null);
             
+            // ✅ Mapear para a interface createUser (incluindo question e answer)
             const userData: createUser = {
                 username: newUser.username,
                 password: newUser.password,
+                question: newUser.question,
+                answer: newUser.answer,
                 adm: newUser.isAdmin
             };
 
+            console.log('PAGE - Dados a enviar:', userData);
 
             const result = await createUserMutation(userData);
             
             if (result) {
-                console.log('Usuário criado com sucesso:', result);
+                console.log('PAGE - Usuário criado com sucesso:', result);
                 setSuccessMessage(`Usuário "${newUser.username}" criado com sucesso!`);
                 
-                // Limpar mensagem após 4 segundos
                 setTimeout(() => setSuccessMessage(null), 4000);
                 
                 await loadUsers();
                 setShowAddUserModal(false);
-            } else if (createError) {
-                console.error('Erro ao criar:', createError);
-                setErrorMessage(`Erro ao criar usuário: ${createError}`);
+            } else {
+                console.error('PAGE - Erro: result nulo');
+                setErrorMessage(`Erro ao criar usuário: ${createError || 'Erro desconhecido'}`);
+                setTimeout(() => setErrorMessage(null), 4000);
             }
         } catch (error) {
-            console.error('Erro ao criar usuário:', error);
-            setErrorMessage('Erro ao criar usuário. Tente novamente.');
+            console.error('PAGE - Erro ao criar usuário:', error);
+            const errorMsg = error instanceof Error ? error.message : 'Erro ao criar usuário. Tente novamente.';
+            setErrorMessage(errorMsg);
+            setTimeout(() => setErrorMessage(null), 4000);
         }
     };
-
 
     const confirmDeleteUser = async (id: number) => {
         try {
@@ -126,12 +125,13 @@ export default function UsuariosPage() {
             
             const userData: deleteUser = { id };
             
+            console.log('Excluindo usuário com ID:', id);
+            
             await deleteUserMutation(userData);
             
             console.log('=== USUÁRIO EXCLUÍDO COM SUCESSO ===');
             setSuccessMessage('Usuário excluído com sucesso!');
             
-            // Limpar mensagem após 4 segundos
             setTimeout(() => setSuccessMessage(null), 4000);
             
             await loadUsers();
@@ -150,10 +150,10 @@ export default function UsuariosPage() {
             }
             
             setErrorMessage(errorMsg);
+            setTimeout(() => setErrorMessage(null), 4000);
             setUserToDelete(null);
         }
     };
-
 
     const getRoleBadge = (role: string) => {
         const badges = {
@@ -167,17 +167,14 @@ export default function UsuariosPage() {
         return { class: badges[role as keyof typeof badges], label: labels[role as keyof typeof labels] };
     };
 
-
     const getStatusBadge = (status: string) => {
         return status === 'active' 
             ? { class: 'bg-green-100 text-green-800', label: 'Ativo' }
             : { class: 'bg-gray-100 text-gray-800', label: 'Inativo' };
     };
 
-
     const isLoading = isLoadingList || isCreating || isDeleting;
     const currentError = fetchError || createError || deleteError;
-
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -198,7 +195,6 @@ export default function UsuariosPage() {
                 </div>
             )}
 
-
             {/* Mensagem de Erro */}
             {errorMessage && (
                 <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
@@ -215,7 +211,6 @@ export default function UsuariosPage() {
                     </button>
                 </div>
             )}
-
 
             {/* Header */}
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -237,7 +232,6 @@ export default function UsuariosPage() {
                         {isCreating ? 'Criando...' : 'Novo Usuário'}
                     </button>
                 </div>
-
 
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -285,7 +279,6 @@ export default function UsuariosPage() {
                     </div>
                 </div>
 
-
                 {/* Filtros */}
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
@@ -299,7 +292,6 @@ export default function UsuariosPage() {
                         />
                     </div>
 
-
                     <div className="relative min-w-[180px]">
                         <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <select
@@ -312,7 +304,6 @@ export default function UsuariosPage() {
                             <option value="user">Usuário</option>
                         </select>
                     </div>
-
 
                     <div className="relative min-w-[180px]">
                         <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -328,7 +319,6 @@ export default function UsuariosPage() {
                     </div>
                 </div>
 
-
                 {/* Erro Geral ao Carregar */}
                 {currentError && (
                     <div className="mt-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
@@ -337,7 +327,6 @@ export default function UsuariosPage() {
                     </div>
                 )}
             </div>
-
 
             {/* Mensagem de Confirmação de Exclusão */}
             {userToDelete !== null && (
@@ -371,7 +360,6 @@ export default function UsuariosPage() {
                     </div>
                 </div>
             )}
-
 
             {/* Tabela de Usuários */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -453,14 +441,12 @@ export default function UsuariosPage() {
                 )}
             </div>
 
-
             {/* Modals */}
             <AddUserModal
                 isOpen={showAddUserModal}
                 onClose={() => setShowAddUserModal(false)}
                 onSave={handleAddUser}
             />
-
 
             {/* CSS Animation */}
             <style jsx>{`

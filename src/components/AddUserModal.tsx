@@ -108,16 +108,26 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
     };
 
     const handleSubmit = async () => {
-        if (!validateForm()) return;
+        console.log('=== Modal - SUBMIT ===');
+        console.log('FormData:', formData);
+        
+        if (!validateForm()) {
+            console.log('Modal - Validação falhou');
+            return;
+        }
 
         setIsSaving(true);
         try {
             if (onSave) {
+                console.log('Modal - Enviando para página:', formData);
                 await onSave(formData);
+                console.log('Modal - Sucesso!');
             }
             handleClose();
         } catch (error) {
-            console.error('Erro ao criar usuário:', error);
+            console.error('Modal - Erro ao criar usuário:', error);
+            const errorMsg = error instanceof Error ? error.message : 'Erro ao criar usuário';
+            setErrors({ username: errorMsg });
         } finally {
             setIsSaving(false);
         }
@@ -165,7 +175,6 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
             height=""
         >
             <div className="p-6">
-                {/* ✅ BARRA DE ROLAGEM ADICIONADA */}
                 <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4 max-h-[500px] overflow-y-auto pr-4">
                     {/* Username */}
                     <div>
