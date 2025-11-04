@@ -3,6 +3,7 @@ import { Calendar, Users, MapPin, Clock, Plus, Trash2, UserPlus, Search, X } fro
 import ModalComponent from '../components/Modal';
 import Sidebar from '../components/Sidebar';
 import ProfileModal from '../components/ProfileModal';
+import UsuariosPage from '../pages/UsuariosPage';
 
 import { useCreateEvent } from '../hooks/eventHooks/createEvent.Hook';
 import { useDeleteEvent } from '../hooks/eventHooks/deleteEvent.Hook';
@@ -323,6 +324,7 @@ export default function EventManagementSystem() {
 
             {/* Main Content */}
             <div className="flex-1 p-6 overflow-auto">
+                {/* TELA DE EVENTOS */}
                 {currentView === 'eventos' && (
                     <div className="max-w-7xl mx-auto">
                         <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -337,10 +339,11 @@ export default function EventManagementSystem() {
                                         setGlobalError(null);
                                     }}
                                     disabled={isCreating}
-                                    className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${isCreating
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                                        }`}
+                                    className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${
+                                        isCreating
+                                            ? 'bg-gray-400 cursor-not-allowed'
+                                            : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                    }`}
                                 >
                                     <Plus className="w-5 h-5" />
                                     {isCreating ? 'Aguarde...' : 'Novo Evento'}
@@ -405,32 +408,10 @@ export default function EventManagementSystem() {
                         )}
                     </div>
                 )}
+         
 
-                {currentView === 'participantes' && (
-                    <div className="max-w-7xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-lg p-6">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">Participantes</h1>
-                            <p className="text-gray-600">Gerencie todos os participantes cadastrados</p>
-                            <div className="mt-8 text-center text-gray-500">
-                                <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                                <p>Esta funcionalidade está em desenvolvimento...</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {currentView === 'usuarios' && (
-                    <div className="max-w-7xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-lg p-6">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">Usuários</h1>
-                            <p className="text-gray-600">Gerencie os usuários do sistema</p>
-                            <div className="mt-8 text-center text-gray-500">
-                                <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                                <p>Esta funcionalidade está em desenvolvimento...</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {/* TELA DE USUÁRIOS */}
+                {currentView === 'usuarios' && <UsuariosPage />}
             </div>
 
             {/* Profile Modal */}
@@ -541,10 +522,11 @@ export default function EventManagementSystem() {
                             <button
                                 onClick={confirmDeleteEvent}
                                 disabled={isDeleting}
-                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isDeleting
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-red-600 hover:bg-red-700'
-                                    }`}
+                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
+                                    isDeleting
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-red-600 hover:bg-red-700'
+                                }`}
                             >
                                 {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
                             </button>
@@ -637,10 +619,11 @@ export default function EventManagementSystem() {
                             <button
                                 onClick={handleCreateEvent}
                                 disabled={isCreating}
-                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isCreating
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                                    }`}
+                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
+                                    isCreating
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                }`}
                             >
                                 {isCreating ? 'Criando...' : 'Criar Evento'}
                             </button>
@@ -715,10 +698,11 @@ export default function EventManagementSystem() {
                             <button
                                 onClick={handleAddParticipant}
                                 disabled={isAddingParticipant}
-                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isAddingParticipant
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                                    }`}
+                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
+                                    isAddingParticipant
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                }`}
                             >
                                 {isAddingParticipant ? 'Adicionando...' : 'Adicionar'}
                             </button>

@@ -8,10 +8,10 @@ import Events from './pages/Events';
 import Donate from './pages/Donate';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
-import Event from './pages/Event';
+import System from './pages/Event';
 
 function AppContent() {
-  const nonLayoutPages = ['/login', '/event']
+  const nonLayoutPages = ['/login', '/System']
 
   const location = useLocation();
   const hideLayout = nonLayoutPages.includes(location.pathname)
@@ -27,7 +27,7 @@ function AppContent() {
           <Route path="/doe" element={<Donate />} />
           <Route path="/contato" element={<Contact />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/event" element={<Event />} />
+          <Route path="/system" element={<System/>} />
           <Route
             path="*"
             element={
