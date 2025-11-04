@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Calendar, Users, UserCircle, UsersRound, Menu, X, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
-    currentView: 'eventos' | 'participantes' | 'usuarios' | 'perfil';
-    onViewChange: (view: 'eventos' | 'participantes' | 'usuarios' | 'perfil') => void;
+    currentView: 'eventos'| 'usuarios' | 'perfil';
+    onViewChange: (view: 'eventos' | 'usuarios' | 'perfil') => void;
     userName?: string;
     userEmail?: string;
 }
@@ -15,7 +15,6 @@ export default function Sidebar({ currentView, onViewChange, userName = "Usuári
     const menuItems = [
         { id: 'perfil', label: 'Perfil', icon: UserCircle },
         { id: 'eventos', label: 'Eventos', icon: Calendar },
-        { id: 'participantes', label: 'Participantes', icon: Users },
         { id: 'usuarios', label: 'Usuários', icon: UsersRound },
     ];
 
@@ -87,7 +86,7 @@ export default function Sidebar({ currentView, onViewChange, userName = "Usuári
                             <button
                                 key={item.id}
                                 onClick={() => {
-                                    onViewChange(item.id as 'eventos' | 'participantes' | 'usuarios' | 'perfil');
+                                    onViewChange(item.id as 'eventos' | 'usuarios' | 'perfil');
                                     setIsMobileOpen(false);
                                 }}
                                 className={`
