@@ -18,11 +18,6 @@ interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
 async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Promise<T | null> {
   const url = `${BASE_URL}${endpoint}`;
 
-  console.log(`%c[API REQUEST] ${options.method || 'GET'} ${url}`, 'color: #4CAF50; font-weight: bold');
-  if (options.body) {
-    console.log('[API BODY]', options.body);
-  }
-
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -41,10 +36,6 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
         ? (body as BodyInit)
         : JSON.stringify(body);
 
-  if (resolvedBody && typeof resolvedBody === 'string') {
-    console.log('[API JSON BODY]', resolvedBody);
-  }
-
   const config: RequestInit = {
     ...restOptions,
     headers: defaultHeaders,
@@ -55,9 +46,6 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
   let response: Response;
   try {
     response = await fetch(url, config);
-    console.log(`%c[API RESPONSE] Status: ${response.status}`, 
-      response.ok ? 'color: #4CAF50' : 'color: #f44336'
-    );
   } catch (networkError) {
     console.error('%c[API NETWORK ERROR]', 'color: #f44336; font-weight: bold', networkError);
     throw new Error('Falha na conexão com o servidor. Verifique sua rede.');
@@ -81,13 +69,11 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
   const contentType: string | null = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
     const jsonData = await response.json();
-    console.log('[API RESPONSE DATA]', jsonData);
     return jsonData as T;
   }
 
   // Para respostas sem conteúdo (204 No Content)
   const text = await response.text();
-  console.log('[API RESPONSE TEXT]', text || '(empty)');
   return text ? (text as any) : null;
 }
 

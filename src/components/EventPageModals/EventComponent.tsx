@@ -1,12 +1,20 @@
 import { Calendar, Clock, MapPin, Users, Trash2 } from "lucide-react"
 
-export default function EventComponent ({ key, titulo, descricao, data, hora, localizacao, deleteFunction, clickFunction }:
-     { key: number, titulo: string, descricao: string, data: string, hora: string, localizacao: string, deleteFunction: (e: any) => void, clickFunction: () => void }) {
+export default function EventComponent({ key, titulo, descricao, data, hora, localizacao, imageUrl, deleteFunction, clickFunction }:
+    { key: number, titulo: string, descricao: string, data: string, hora: string, localizacao: string, imageUrl?: string, deleteFunction: (e: any) => void, clickFunction: () => void }) {
     return (<div
         key={key}
         className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer transform hover:scale-[1.02]"
         onClick={clickFunction}
     >
+
+        {imageUrl && (
+            <img
+                src={imageUrl}
+                alt={titulo + "_cover"}
+                className="w-full h-48 object-cover rounded-lg mb-4"
+            />
+        )}
         <div className="flex flex-col md:flex-row justify-between gap-4">
             <div className="flex-1">
                 <h3 className="text-xl font-bold text-gray-800 mb-2">{titulo}</h3>

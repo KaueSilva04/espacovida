@@ -18,21 +18,21 @@ export function useCreateEvent(): UseCreateEventResult {
   const createEventMutation = async (data: createEvent): Promise<completeEvent> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Chama o service que faz a requisição e desembrulha o JSON
       const newEvent = await creatEventService.createEvent(data);
-      
+
       // Retorna o objeto completo do evento tipado
-      return newEvent; 
+      return newEvent;
     } catch (e) {
       // Captura o erro lançado pelo service
-      const errorMessage = (e instanceof Error) 
-        ? e.message 
+      const errorMessage = (e instanceof Error)
+        ? e.message
         : "Erro desconhecido ao criar o evento.";
-      
+
       setError(errorMessage);
-      throw e; 
+      throw e;
     } finally {
       setIsLoading(false);
     }

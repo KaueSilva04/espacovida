@@ -13,7 +13,7 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { PublicRoute } from './components/layout/PublicRoute';
 
 function AppContent() {
-  const nonLayoutPages = ['/login', '/System'];
+  const nonLayoutPages = ['/login', '/System', '/system'];
 
   const location = useLocation();
   const hideLayout = nonLayoutPages.includes(location.pathname);

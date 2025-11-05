@@ -19,5 +19,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ element }) => {
 
   if (isAuth === null) return <div>Carregando...</div>; 
 
+  if (!isAuth && localStorage.getItem('isAuthenticated') === 'true') localStorage.removeItem('isAuthenticated');
+
   return isAuth ? element : <Navigate to="/login" replace />;
 };

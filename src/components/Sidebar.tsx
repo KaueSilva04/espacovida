@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Calendar, Users, UserCircle, UsersRound, Menu, X, ChevronRight } from 'lucide-react';
+import { Calendar, LogOut, UserCircle, UsersRound, Menu, X, ChevronRight } from 'lucide-react';
+import { useLogoutUser } from '../hooks/userHooks/logoutUser.Hook';
+import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
-    currentView: 'eventos'| 'usuarios' | 'perfil';
+    currentView: 'eventos' | 'usuarios' | 'perfil';
     onViewChange: (view: 'eventos' | 'usuarios' | 'perfil') => void;
     userName?: string;
     userEmail?: string;
@@ -12,11 +14,24 @@ export default function Sidebar({ currentView, onViewChange, userName = "Usuári
     const [isOpen, setIsOpen] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+    const { logoutUser } = useLogoutUser();
+    const navigate = useNavigate();
+
     const menuItems = [
         { id: 'perfil', label: 'Perfil', icon: UserCircle },
         { id: 'eventos', label: 'Eventos', icon: Calendar },
         { id: 'usuarios', label: 'Usuários', icon: UsersRound },
     ];
+
+    const handleLogout = async () => {
+        try {
+            await logoutUser();
+            localStorage.removeItem("isAuthenticated");
+            navigate('/login');
+        } catch (err) {
+            console.error("Erro ao fazer logout:", err);
+        }
+    };
 
     return (
         <>
@@ -111,6 +126,22 @@ export default function Sidebar({ currentView, onViewChange, userName = "Usuári
                         );
                     })}
                 </nav>
+
+                {/* Botão de logout no bottom */}
+
+                <div className="p-4 border-t border-green-500">
+                    <button
+                        // onclick que chama o hook de logout e redireciona
+                        onClick={handleLogout}
+
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-green-700 transition-all duration-200"
+                    >
+                        <LogOut className="w-5 h-5 flex-shrink-0" />
+                        {isOpen && (
+                            <span className="font-medium truncate">Logout</span>
+                        )}
+                    </button>
+                </div>
 
                 {/* Footer */}
                 <div className="p-4 border-t border-green-500">

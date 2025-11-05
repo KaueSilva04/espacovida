@@ -15,11 +15,13 @@ import { completeEvent } from '../interfaces/eventInterfaces/completeEvent.Inter
 import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook';
 import { newParticipant as NewParticipantInterface } from '../interfaces/participantInterfaces/newParticipant.Interface';
 import { deleteParticipantInterface } from '../interfaces/participantInterfaces/deleteParticipant.Interface';
+import { uploadImageToCloudinary } from '../services/upload/uploadToCloudinary.Service';
 import EventComponent from '../components/EventPageModals/EventComponent';
 import completeParticipant from '../interfaces/participantInterfaces/completeParticipant.Interface';
 
 // --- Interfaces ---
 interface EventState extends completeEvent {
+    coverImageUrl?: string;
     id: number;
     title: string;
     description: string
@@ -67,7 +69,7 @@ export default function EventManagementSystem() {
     const { deleteParticipant: deleteParticipantMutation, isLoading: isDeletingParticipant, error: deleteParticipantError } = useDeleteParticipant();
 
     // --- Estados de Navegação ---
-    const [currentView, setCurrentView] = useState<'eventos' | 'participantes' | 'usuarios' | 'perfil'>('eventos');
+    const [currentView, setCurrentView] = useState<'eventos' | 'usuarios' | 'perfil'>('eventos');
     const [showProfileModal, setShowProfileModal] = useState(false);
 
     // --- Estados de Perfil ---
@@ -95,6 +97,12 @@ export default function EventManagementSystem() {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [globalError, setGlobalError] = useState<string | null>(null);
     const [shouldRefetch, setShouldRefetch] = useState<boolean>(true);
+
+    // --- Estados de Upload ---
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [uploadedImage, setUploadedImage] = useState<{ url: string; publicId: string } | null>(null);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
 
     // --- Formulários ---
     const [eventForm, setEventForm] = useState<EventFormState>({
@@ -134,7 +142,7 @@ export default function EventManagementSystem() {
     }, [fetchedEvents]);
 
     // --- Handlers de Navegação ---
-    const handleViewChange = (view: 'eventos' | 'participantes' | 'usuarios' | 'perfil') => {
+    const handleViewChange = (view: 'eventos' | 'usuarios' | 'perfil') => {
         setCurrentView(view);
         if (view === 'perfil') {
             setShowProfileModal(true);
@@ -147,38 +155,86 @@ export default function EventManagementSystem() {
         await new Promise(resolve => setTimeout(resolve, 1000));
     };
 
+    const handleUploadImage = async () => {
+        if (!imageFile) return;
+
+        try {
+            setIsUploading(true);
+            setUploadProgress(0);
+
+            const result = await uploadImageToCloudinary(imageFile, setUploadProgress);
+
+            setUploadedImage({
+                url: result.secure_url,
+                publicId: result.public_id,
+            });
+        } catch (error) {
+            setGlobalError('Erro ao fazer upload da imagem: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     // --- Handlers de Eventos ---
     const handleCreateEvent = async () => {
         setGlobalError(null);
+
         if (!eventForm.title || !eventForm.date || !eventForm.time || !eventForm.location) {
             alert('Preencha todos os campos obrigatórios!');
             return;
         }
 
-        const payload: createEvent = {
-            title: eventForm.title,
-            description: eventForm.description,
-            date: `${eventForm.date}T${eventForm.time}:00.000Z`,
-            location: eventForm.location,
-        };
+        if (isCreating) return; // evita duplo clique
+        setIsUploading(true);
 
         try {
+            let uploadedUrl: string | null = null;
+            let uploadedPublicId: string | null = null;
+
+
+            if (imageFile) {
+                console.log('Iniciando upload...');
+                const uploadResult = await uploadImageToCloudinary(imageFile, setUploadProgress);
+                uploadedUrl = uploadResult.secure_url;
+                uploadedPublicId = uploadResult.public_id;
+                console.log('Upload concluído:', uploadedUrl);
+            }
+
+            const payload: createEvent = {
+                title: eventForm.title,
+                description: eventForm.description,
+                date: `${eventForm.date}T${eventForm.time}:00.000Z`,
+                location: eventForm.location,
+                coverImageUrl: uploadedUrl || null,
+                imagePublicId: uploadedPublicId || null,
+            };
+
+            console.log('Enviando payload final:', payload);
+
             const newEventData = await createEventMutation(payload);
+
             const newEvent: EventState = {
                 ...newEventData,
                 id: newEventData.idevent,
                 time: eventForm.time,
                 participants: [],
-                status: 'upcoming'
+                status: 'upcoming',
+                coverImageUrl: uploadedUrl || undefined,
             };
 
-            setEvents(prevEvents => [...prevEvents, newEvent]);
+            setEvents(prev => [...prev, newEvent]);
             setShowEventModal(false);
             resetEventForm();
-        } catch (e) {
-            setGlobalError(createError || (e as Error).message);
+        } catch (error) {
+            console.error('Erro ao criar evento:', error);
+            setGlobalError(createError || (error instanceof Error ? error.message : 'Erro desconhecido'));
+        } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
+            setImageFile(null);
         }
     };
+
 
     const handleDeleteEvent = (eventId: number) => {
         setGlobalError(null);
@@ -307,7 +363,7 @@ export default function EventManagementSystem() {
 
     // --- Reset Forms ---
     const resetEventForm = () => {
-        setEventForm({ title: '', description: '', date: '', time: '', location: ''});
+        setEventForm({ title: '', description: '', date: '', time: '', location: '' });
     };
 
     const resetParticipantForm = () => {
@@ -352,11 +408,10 @@ export default function EventManagementSystem() {
                                         setGlobalError(null);
                                     }}
                                     disabled={isCreating}
-                                    className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${
-                                        isCreating
-                                            ? 'bg-gray-400 cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                                    }`}
+                                    className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${isCreating
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                        }`}
                                 >
                                     <Plus className="w-5 h-5" />
                                     {isCreating ? 'Aguarde...' : 'Novo Evento'}
@@ -405,6 +460,7 @@ export default function EventManagementSystem() {
                                         data={event.date}
                                         hora={event.time}
                                         localizacao={event.location}
+                                        imageUrl={event.coverImageUrl || ''}
                                         deleteFunction={(e) => {
                                             e.stopPropagation();
                                             handleDeleteEvent(event.id);
@@ -419,7 +475,7 @@ export default function EventManagementSystem() {
                         )}
                     </div>
                 )}
-         
+
 
                 {/* TELA DE USUÁRIOS */}
                 {currentView === 'usuarios' && <UsuariosPage />}
@@ -538,11 +594,10 @@ export default function EventManagementSystem() {
                             <button
                                 onClick={confirmDeleteEvent}
                                 disabled={isDeleting}
-                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
-                                    isDeleting
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-red-600 hover:bg-red-700'
-                                }`}
+                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isDeleting
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-red-600 hover:bg-red-700'
+                                    }`}
                             >
                                 {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
                             </button>
@@ -610,6 +665,23 @@ export default function EventManagementSystem() {
                             />
                         </div>
 
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                        />
+
+                        {imageFile && (
+                            <div className="mt-3">
+                                <img
+                                    src={URL.createObjectURL(imageFile)}
+                                    alt="Prévia da imagem"
+                                    className="w-full h-48 object-cover rounded-lg border border-gray-200 shadow-sm"
+                                />
+                            </div>
+                        )}
+
                         <div className="flex gap-4 pt-4">
                             <button
                                 onClick={() => {
@@ -622,14 +694,13 @@ export default function EventManagementSystem() {
                             </button>
                             <button
                                 onClick={handleCreateEvent}
-                                disabled={isCreating}
-                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
-                                    isCreating
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                                }`}
+                                disabled={isCreating || isUploading}
+                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isCreating || isUploading
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                    }`}
                             >
-                                {isCreating ? 'Criando...' : 'Criar Evento'}
+                                {isCreating || isUploading ? 'Enviando...' : 'Criar Evento'}
                             </button>
                         </div>
                     </div>
@@ -702,11 +773,10 @@ export default function EventManagementSystem() {
                             <button
                                 onClick={handleAddParticipant}
                                 disabled={isAddingParticipant}
-                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
-                                    isAddingParticipant
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                                }`}
+                                className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isAddingParticipant
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                    }`}
                             >
                                 {isAddingParticipant ? 'Adicionando...' : 'Adicionar'}
                             </button>
