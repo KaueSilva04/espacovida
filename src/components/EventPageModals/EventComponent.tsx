@@ -1,10 +1,10 @@
 import { Calendar, Clock, MapPin, Users, Trash2 } from "lucide-react"
 
-export default function EventComponent({ key, titulo, descricao, data, hora, localizacao, imageUrl, deleteFunction, clickFunction }:
-    { key: number, titulo: string, descricao: string, data: string, hora: string, localizacao: string, imageUrl?: string, deleteFunction: (e: any) => void, clickFunction: () => void }) {
+export default function EventComponent({ key, titulo, descricao, data, hora, localizacao, imageUrl, deleteFunction, clickFunction, passado }:
+    { key: number, titulo: string, descricao: string, data: string, hora: string, localizacao: string, imageUrl?: string, deleteFunction: (e: any) => void, clickFunction: () => void, passado: boolean }) {
     return (<div
         key={key}
-        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer transform hover:scale-[1.02]"
+        className={(passado?"bg-slate-100" : "bg-white") + (" rounded-xl shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer transform hover:scale-[1.02]")}
         onClick={clickFunction}
     >
 

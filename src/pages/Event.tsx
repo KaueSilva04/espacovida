@@ -452,7 +452,7 @@ export default function EventManagementSystem() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {filteredEvents.map(event => (
+                                {filteredEvents.filter(e => new Date(e.date) >= new Date()).map(event => (
                                     <EventComponent
                                         key={event.id}
                                         titulo={event.title}
@@ -466,9 +466,37 @@ export default function EventManagementSystem() {
                                             handleDeleteEvent(event.id);
                                         }}
                                         clickFunction={() => {
-                                            setSelectedEvent(event)
-                                            handleGetAllParticipantsByEvent(event.id, event)
+                                            setSelectedEvent(event);
+                                            handleGetAllParticipantsByEvent(event.id, event);
                                         }}
+                                        passado={false}
+                                    />
+                                ))}
+                                {!showLoading &&
+                                    <div className='flex justify-between h-[80px]'>
+                                        <p className='mt-auto text-slate-400'>Eventos passados</p>
+                                        <hr className='bg-slate-400 mt-auto w-[1140px] h-[2px] mb-3'></hr>
+                                    </div>
+                                }
+
+                                {filteredEvents.filter(e => new Date(e.date) < new Date()).map(event => (
+                                    <EventComponent
+                                        key={event.id}
+                                        titulo={event.title}
+                                        descricao={event.description}
+                                        data={event.date}
+                                        hora={event.time}
+                                        localizacao={event.location}
+                                        imageUrl={event.coverImageUrl || ''}
+                                        deleteFunction={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteEvent(event.id);
+                                        }}
+                                        clickFunction={() => {
+                                            setSelectedEvent(event);
+                                            handleGetAllParticipantsByEvent(event.id, event);
+                                        }}
+                                        passado={true}
                                     />
                                 ))}
                             </div>
