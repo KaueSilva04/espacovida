@@ -51,6 +51,7 @@ const EventCard = ({
     </div>
   </div>;
 };
+
 const RegistrationForm = ({
   event,
   onClose
@@ -58,25 +59,146 @@ const RegistrationForm = ({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    comments: ''
+    phone: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const handleChange = e => {
-    const {
-      name,
-      value
-    } = e.target;
+  const [validationErrors, setValidationErrors] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+  const { createParticipant, loading, error } = useNewParticipant();
+
+  // Função de validação de email
+  const validateEmail = (email: string): string => {
+    if (!email || email.trim() === '') {
+      return 'E-mail é obrigatório';
+    }
+    
+    if (email.length > 100) {
+      return 'E-mail deve ter no máximo 100 caracteres';
+    }
+    
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return 'E-mail inválido';
+    }
+    
+    return '';
+  };
+
+  // Função de validação de telefone (formato brasileiro)
+  const validatePhone = (phone: string): string => {
+    if (!phone || phone.trim() === '') {
+      return 'Telefone é obrigatório';
+    }
+    
+    // Remove caracteres não numéricos para validação
+    const phoneNumbers = phone.replace(/\D/g, '');
+    
+    if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
+      return 'Telefone deve ter 10 ou 11 dígitos';
+    }
+    
+    // Valida formato brasileiro: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+    const phoneRegex = /^(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}$/;
+    if (!phoneRegex.test(phone)) {
+      return 'Formato de telefone inválido. Use: (XX) XXXXX-XXXX';
+    }
+    
+    return '';
+  };
+
+  // Função de validação de nome
+  const validateName = (name: string): string => {
+    if (!name || name.trim() === '') {
+      return 'Nome é obrigatório';
+    }
+    
+    if (name.length < 3) {
+      return 'Nome deve ter no mínimo 3 caracteres';
+    }
+    
+    if (name.length > 100) {
+      return 'Nome deve ter no máximo 100 caracteres';
+    }
+    
+    return '';
+  };
+
+  // Formatar telefone enquanto digita
+  const formatPhone = (value: string): string => {
+    const numbers = value.replace(/\D/g, '');
+    
+    if (numbers.length <= 10) {
+      // Formato: (XX) XXXX-XXXX
+      return numbers
+        .replace(/^(\d{2})(\d)/g, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2');
+    } else {
+      // Formato: (XX) XXXXX-XXXX
+      return numbers
+        .replace(/^(\d{2})(\d)/g, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .slice(0, 15);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    // Formatar telefone durante digitação
+    const formattedValue = name === 'phone' ? formatPhone(value) : value;
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: formattedValue
+    }));
+    
+    // Limpar erro do campo quando usuário começa a digitar
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    let errorMessage = '';
+    
+    // Validar campo específico quando perde o foco
+    switch (name) {
+      case 'name':
+        errorMessage = validateName(value);
+        break;
+      case 'email':
+        errorMessage = validateEmail(value);
+        break;
+      case 'phone':
+        errorMessage = validatePhone(value);
+        break;
+    }
+    
+    setValidationErrors(prev => ({
+      ...prev,
+      [name]: errorMessage
     }));
   };
-  const handleSubmit = e => {
-    e.preventDefault();
-    // In a real app, this would send the data to a backend
-    console.log('Form submitted:', formData);
-    setIsSubmitted(true);
+
+  const validateForm = (): boolean => {
+    const nameError = validateName(formData.name);
+    const emailError = validateEmail(formData.email);
+    const phoneError = validatePhone(formData.phone);
+    
+    setValidationErrors({
+      name: nameError,
+      email: emailError,
+      phone: phoneError
+    });
+    
+    return !nameError && !emailError && !phoneError;
   };
   return <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-lg w-full max-w-md">
@@ -144,6 +266,8 @@ const RegistrationForm = ({
     </div>
   </div>;
 };
+
+
 const Events = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
@@ -155,6 +279,7 @@ const Events = () => {
     setSelectedEvent(event);
     setShowRegistrationForm(true);
   };
+
   const closeRegistrationForm = () => {
     setShowRegistrationForm(false);
   };
@@ -280,4 +405,5 @@ const Events = () => {
     {showRegistrationForm && selectedEvent && <RegistrationForm event={selectedEvent} onClose={closeRegistrationForm} />}
   </div>;
 };
+
 export default Events;
