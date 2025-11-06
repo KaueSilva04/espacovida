@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CalendarIcon, ClockIcon, MapPinIcon, UserIcon } from 'lucide-react';
-import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook';
-import { useGetPublicEvents } from '../hooks/eventHooks/useGetPublicEvents.Hook';
+import { useNewParticipant } from '../../hooks/participantHooks/newParticipant.Hook';
+import { useGetPublicEvents } from '../../hooks/eventHooks/useGetPublicEvents.Hook';
 
 const DEFAULT_IMAGES = [
   'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80',

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Search, Users, Shield, Trash2, UserPlus, Filter, AlertCircle, CheckCircle } from 'lucide-react';
-import AddUserModal from '../components/AddUserModal';
-import { useListAllUsers } from '../hooks/userHooks/listAllUser.Hook';
-import { useCreateUser } from '../hooks/userHooks/createUser.Hook';
-import { useDeleteUser } from '../hooks/userHooks/deleteUser.Hook';
-import { user } from '../interfaces/userInterfaces/user.Interface';
-import { createUser } from '../interfaces/userInterfaces/createUser.Interface';
-import { deleteUser } from '../interfaces/userInterfaces/deleteUser.Interface';
+import AddUserModal from '../../components/AddUserModal';
+import { useListAllUsers } from '../../hooks/userHooks/listAllUser.Hook';
+import { useCreateUser } from '../../hooks/userHooks/createUser.Hook';
+import { useDeleteUser } from '../../hooks/userHooks/deleteUser.Hook';
+import { user } from '../../interfaces/userInterfaces/user.Interface';
+import { createUser } from '../../interfaces/userInterfaces/createUser.Interface';
+import { deleteUser } from '../../interfaces/userInterfaces/deleteUser.Interface';
 
 interface UserDisplay extends user {
     role: 'admin' | 'user';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
 // Importando o hook de login que você criou
-import { useloginUser } from '../hooks/userHooks/loginUser.Hook'; // Ajuste o caminho se necessário
+import { useloginUser } from '../../hooks/userHooks/loginUser.Hook'; // Ajuste o caminho se necessário
 
 import { useNavigate } from 'react-router-dom';
 

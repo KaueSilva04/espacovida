@@ -97,6 +97,7 @@ interface HeaderContainerProps {
   pageTitle: string;
   pageSubtitle: string;
   notificationCount: number;
+  onProfileClick?: () => void;
 }
 
 const HeaderContainer: React.FC<HeaderContainerProps> = ({ pageTitle, pageSubtitle, notificationCount }) => {

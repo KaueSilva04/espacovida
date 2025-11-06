@@ -1,5 +1,5 @@
 export interface completeEvent {
-    coverImageUrl: string;
+    coverImageUrl?: string;
     idevent: number;
     title: string;
     location: string;

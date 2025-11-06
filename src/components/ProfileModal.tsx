@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'; // Importando hooks do React
 import { userProfile } from '../interfaces/userInterfaces/userProfile.Interface';
 // 2. Importe o hook de carregar dados
 import { useRenderProfile } from '../hooks/userHooks/renderUserProfile.Hook';
+import ProfileData from '../interfaces/FrontendInterfaces/EventPage/ProfileData.Interface';
 
 
 interface ModalComponentProps {
@@ -55,7 +56,9 @@ function ModalComponent({
 
 interface ProfileModalProps {
     isOpen: boolean;
+    profileData: ProfileData;
     onClose: () => void;
+    onSave: () => void;
 }
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
