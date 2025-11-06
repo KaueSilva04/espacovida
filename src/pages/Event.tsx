@@ -580,15 +580,6 @@ export default function EventManagementSystem() {
                                     <option value="completed">Concluídos/Passados</option>
                                 </select>
 
-                                {/* Botão Exportar CSV */}
-                                <button
-                                    onClick={() => alert('Função "Exportar CSV" não implementada.')}
-                                    className="flex items-center gap-2 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
-                                >
-                                    <FileDown className="w-4 h-4" />
-                                    CSV
-                                </button>
-
                                 {/* Botão de Reset (NOVO e funcional) */}
                                 <button
                                     onClick={handleResetFilters}
@@ -645,7 +636,7 @@ export default function EventManagementSystem() {
                                         passado={false}
                                     />
                                 ))}
-                                {!showLoading &&
+                                {(!showLoading && filterStatus != "upcoming" && filterStatus != "completed") &&
                                     <div className='flex justify-between h-[80px]'>
                                         <p className='mt-auto text-gray-500 dark:text-gray-400'>Eventos passados</p>
                                         <hr className='bg-gray-400 dark:bg-gray-600 mt-auto w-[1140px] h-[2px] mb-3'></hr>
