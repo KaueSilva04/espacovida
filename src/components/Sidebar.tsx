@@ -9,8 +9,8 @@ import {
     ChevronRight,
     Sparkles, // Adicionado para o logo "Espaço Vida"
     HelpCircle, // Adicionado para o botão de Ajuda
-    Sun,        // Adicionado para o seletor de tema
-    Moon        // Adicionado para o seletor de tema
+    Sun,        // Adicionado para o seletor de tema
+    Moon        // Adicionado para o seletor de tema
 } from 'lucide-react';
 
 // Restaurando os imports que você usa
@@ -20,9 +20,11 @@ import { useNavigate } from 'react-router-dom';
 interface SidebarProps {
     currentView: 'eventos' | 'usuarios' | 'perfil';
     onViewChange: (view: 'eventos' | 'usuarios' | 'perfil') => void;
+    userName: string; // Adicionado para completar a interface da Sidebar
+    userEmail: string; // Adicionado para completar a interface da Sidebar
 }
 
-export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, userName, userEmail }: SidebarProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     // Este é o estado que controla o tema
@@ -30,12 +32,12 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     
     // Esta é a função que aplica o tema ao HTML
     useEffect(() => {
-      const root = window.document.documentElement; 
-      if (theme === 'dark') {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
+        const root = window.document.documentElement; 
+        if (theme === 'dark') {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
     }, [theme]);
 
     const { logoutUser } = useLogoutUser();
@@ -46,8 +48,8 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
         { id: 'usuarios', label: 'Usuários', icon: UsersRound },
     ];
 
+    // REMOVIDO o item 'perfil'. Acesso será via Header.
     const bottomMenuItems = [
-        { id: 'perfil', label: 'Perfil', icon: UserCircle },
         { id: 'ajuda', label: 'Ajuda', icon: HelpCircle },
     ];
 
@@ -159,14 +161,14 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                         ))}
                     </nav>
 
-                    {/* 2b. Itens Inferiores (Perfil, Ajuda, Logout, Tema) */}
+                    {/* 2b. Itens Inferiores (Ajuda, Logout, Tema) */}
                     <div className="p-4 space-y-2 border-t border-gray-200 dark:border-dark-border">
                         {bottomMenuItems.map((item) => (
                              <NavButton 
-                                key={item.id}
-                                item={item} 
-                                isActive={currentView === item.id && item.id === 'perfil'} 
-                            />
+                                 key={item.id}
+                                 item={item} 
+                                 isActive={currentView === item.id && item.id === 'perfil'} 
+                             />
                         ))}
 
                         {/* Botão de Logout */}
@@ -203,7 +205,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                                         onClick={() => setTheme('light')}
                                         className={`p-2 rounded-full transition-all ${ 
                                             theme === 'light' 
-                                            ? 'bg-blue-600 text-white shadow'  
+                                            ? 'bg-blue-600 text-white shadow'  
                                             : 'text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border' 
                                         }`}
                                         aria-label="Mudar para tema claro"

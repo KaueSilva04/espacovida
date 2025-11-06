@@ -2,14 +2,19 @@ import { Calendar, Clock, MapPin, Trash2 } from "lucide-react";
 
 export default function EventComponent({ key, titulo, descricao, data, hora, localizacao, imageUrl, deleteFunction, clickFunction, passado }:
     { key: number, titulo: string, descricao: string, data: string, hora: string, localizacao: string, imageUrl?: string, deleteFunction: (e: any) => void, clickFunction: () => void, passado: boolean }) {
-    
+
     // Define as classes de cor com base no status (passado ou não) e no modo escuro
     const cardClasses = (passado
         // Evento passado: bg-slate-100 no light mode, dark:bg-dark-surface com 80% de opacidade no dark mode
-        ? "bg-slate-100 dark:bg-dark-surface dark:bg-opacity-80" 
+        ? "bg-slate-100 dark:bg-dark-surface dark:bg-opacity-80"
         // Evento futuro: bg-white no light mode, dark:bg-dark-surface (100% opacidade) no dark mode
-        : "bg-white dark:bg-dark-surface") + 
-        " rounded-xl shadow-lg dark:shadow-none p-6 hover:shadow-xl dark:hover:bg-dark-border transition-all cursor-pointer transform hover:scale-[1.02]"; // Classes comuns
+        : "bg-white dark:bg-dark-surface") +
+        " rounded-xl p-6 hover:shadow-2xl transition-all cursor-pointer transform hover:scale-[1.02] " +
+        // --- NOVO CÓDIGO DA SOMBRA FOCO PARA BAIXO E PARA A DIREITA ---
+        // Sombra no Light Mode: escura, para baixo e para a direita
+        " shadow-[8px_8px_16px_-4px_rgba(0,0,0,0.2)] " + // Ajuste a opacidade (0.2) e o blur/spread se necessário
+        // Sombra no Dark Mode: escura, para baixo e para a direita, mas com menos opacidade para sutilidade
+        " dark:shadow-[8px_8px_16px_-4px_rgba(0,0,0,0.3)] ";
 
     return (
         <div

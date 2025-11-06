@@ -179,6 +179,7 @@ export default function UsuariosPage() {
 
     return (
         <div className="max-w-7xl mx-auto ">
+            
             {/* Mensagem de Sucesso */}
             {successMessage && (
                 <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
@@ -213,14 +214,23 @@ export default function UsuariosPage() {
                 </div>
             )}
 
-            {/* Header */}
+            {/* Header / Filtros / Stats */}
             {/* 🎨 DARK MODE: Card principal */}
             <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg p-6 mb-6 ">
+                {/* NOVO BLOCO: Título e Botão de Ação */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    
+                    {/* CONTEÚDO NOVO NA ESQUERDA: Subtítulo/Descrição */}
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 dark:text-dark-text-primary mb-2">Usuários</h1>
-                        <p className="text-gray-600 dark:text-dark-text-secondary">Gerencie os usuários do sistema</p>
+                        <p className="text-xl font-bold text-gray-800 dark:text-dark-text-primary mb-1">
+                            Estatísticas de Acesso
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                            Visão geral rápida sobre os usuários e seus papéis no sistema.
+                        </p>
                     </div>
+                    {/* FIM CONTEÚDO NOVO */}
+                    
                     <button
                         onClick={() => setShowAddUserModal(true)}
                         disabled={isCreating}
@@ -407,10 +417,10 @@ export default function UsuariosPage() {
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                      <thead className="
-                                    bg-gradient-to-r from-green-600 to-green-700 text-white 
-                                    dark:bg-none dark:bg-dark-header
-                                ">
+                            <thead className="
+                                bg-gradient-to-r from-green-600 to-green-700 text-white 
+                                dark:bg-none dark:bg-dark-header
+                            ">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Username</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Função</th>
