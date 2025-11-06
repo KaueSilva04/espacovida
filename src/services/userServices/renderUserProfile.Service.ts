@@ -5,7 +5,7 @@ import ApiResponse from '../../interfaces/ApiResponse.Interface';
 export const renderUserProfile = {
     async userProfile(): Promise<userProfile> {
         const response = await api.get<ApiResponse<userProfile>>('/user/renderprofile')
-
+        console.log(response);
         if (!response) {
             throw new Error('No response from API');
         }
@@ -15,6 +15,6 @@ export const renderUserProfile = {
             throw new Error('API Error: ' + errorMessage);
         }
 
-        return response.data;
+        return response.user;
     }
 }

@@ -28,7 +28,7 @@ export default function UsuariosPage() {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [showAddUserModal, setShowAddUserModal] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
-    
+
     // Estados de mensagem
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -65,13 +65,13 @@ export default function UsuariosPage() {
     };
 
     const filteredUsers = users.filter(user => {
-        const matchesSearch = 
+        const matchesSearch =
             user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.department?.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
         const matchesRole = filterRole === 'all' || user.role === filterRole;
         const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
-        
+
         return matchesSearch && matchesRole && matchesStatus;
     });
 
@@ -79,10 +79,10 @@ export default function UsuariosPage() {
         try {
             console.log('=== PAGE - CRIANDO USUÁRIO ===');
             console.log('newUser recebido:', newUser);
-            
+
             setSuccessMessage(null);
             setErrorMessage(null);
-            
+
             // ✅ Mapear para a interface createUser (incluindo question e answer)
             const userData: createUser = {
                 username: newUser.username,
@@ -95,13 +95,13 @@ export default function UsuariosPage() {
             console.log('PAGE - Dados a enviar:', userData);
 
             const result = await createUserMutation(userData);
-            
+
             if (result) {
                 console.log('PAGE - Usuário criado com sucesso:', result);
                 setSuccessMessage(`Usuário "${newUser.username}" criado com sucesso!`);
-                
+
                 setTimeout(() => setSuccessMessage(null), 4000);
-                
+
                 await loadUsers();
                 setShowAddUserModal(false);
             } else {
@@ -122,25 +122,25 @@ export default function UsuariosPage() {
             console.log('=== EXCLUINDO USUÁRIO ===');
             setSuccessMessage(null);
             setErrorMessage(null);
-            
+
             const userData: deleteUser = { id };
-            
+
             console.log('Excluindo usuário com ID:', id);
-            
+
             await deleteUserMutation(userData);
-            
+
             console.log('=== USUÁRIO EXCLUÍDO COM SUCESSO ===');
             setSuccessMessage('Usuário excluído com sucesso!');
-            
+
             setTimeout(() => setSuccessMessage(null), 4000);
-            
+
             await loadUsers();
             setUserToDelete(null);
-            
+
         } catch (error) {
             console.error('=== ERRO AO EXCLUIR USUÁRIO ===');
             console.error('Erro:', error);
-            
+
             let errorMsg = 'Erro ao excluir usuário.';
             if (error instanceof Error) {
                 errorMsg = error.message;
@@ -148,17 +148,18 @@ export default function UsuariosPage() {
             if (deleteError) {
                 errorMsg = deleteError;
             }
-            
+
             setErrorMessage(errorMsg);
             setTimeout(() => setErrorMessage(null), 4000);
             setUserToDelete(null);
         }
     };
 
+    // 🎨 DARK MODE: Funções de Badge atualizadas
     const getRoleBadge = (role: string) => {
         const badges = {
-            admin: 'bg-red-100 text-red-800',
-            user: 'bg-gray-100 text-gray-800'
+            admin: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+            user: 'bg-gray-100 text-gray-800 dark:bg-dark-border dark:text-dark-text-secondary'
         };
         const labels = {
             admin: 'Administrador',
@@ -168,27 +169,27 @@ export default function UsuariosPage() {
     };
 
     const getStatusBadge = (status: string) => {
-        return status === 'active' 
-            ? { class: 'bg-green-100 text-green-800', label: 'Ativo' }
-            : { class: 'bg-gray-100 text-gray-800', label: 'Inativo' };
+        return status === 'active'
+            ? { class: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', label: 'Ativo' }
+            : { class: 'bg-gray-100 text-gray-800 dark:bg-dark-border dark:text-dark-text-secondary', label: 'Inativo' };
     };
 
     const isLoading = isLoadingList || isCreating || isDeleting;
     const currentError = fetchError || createError || deleteError;
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto ">
             {/* Mensagem de Sucesso */}
             {successMessage && (
-                <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
-                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                        <p className="text-sm font-semibold text-green-800">Sucesso!</p>
-                        <p className="text-xs text-green-700 mt-1">{successMessage}</p>
+                        <p className="text-sm font-semibold text-green-800 dark:text-green-300">Sucesso!</p>
+                        <p className="text-xs text-green-700 dark:text-green-400 mt-1">{successMessage}</p>
                     </div>
                     <button
                         onClick={() => setSuccessMessage(null)}
-                        className="text-green-600 hover:text-green-800 transition-all"
+                        className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 transition-all"
                     >
                         ×
                     </button>
@@ -197,15 +198,15 @@ export default function UsuariosPage() {
 
             {/* Mensagem de Erro */}
             {errorMessage && (
-                <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                        <p className="text-sm font-semibold text-red-800">Erro</p>
-                        <p className="text-xs text-red-700 mt-1">{errorMessage}</p>
+                        <p className="text-sm font-semibold text-red-800 dark:text-red-300">Erro</p>
+                        <p className="text-xs text-red-700 dark:text-red-400 mt-1">{errorMessage}</p>
                     </div>
                     <button
                         onClick={() => setErrorMessage(null)}
-                        className="text-red-600 hover:text-red-800 transition-all"
+                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 transition-all"
                     >
                         ×
                     </button>
@@ -213,20 +214,20 @@ export default function UsuariosPage() {
             )}
 
             {/* Header */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            {/* 🎨 DARK MODE: Card principal */}
+            <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg p-6 mb-6 ">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Usuários</h1>
-                        <p className="text-gray-600">Gerencie os usuários do sistema</p>
+                        <h1 className="text-3xl font-bold text-gray-800 dark:text-dark-text-primary mb-2">Usuários</h1>
+                        <p className="text-gray-600 dark:text-dark-text-secondary">Gerencie os usuários do sistema</p>
                     </div>
-                    <button 
+                    <button
                         onClick={() => setShowAddUserModal(true)}
                         disabled={isCreating}
-                        className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all flex items-center gap-2 ${
-                            isCreating
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                        }`}
+                        className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all flex items-center gap-2 ${isCreating
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                            }`}
                     >
                         <UserPlus className="w-5 h-5" />
                         {isCreating ? 'Criando...' : 'Novo Usuário'}
@@ -234,44 +235,68 @@ export default function UsuariosPage() {
                 </div>
 
                 {/* Stats */}
+                {/* 🎨 DARK MODE: Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+                    {/* Card 1: Total */}
+                    <div className="
+        bg-gradient-to-br from-blue-50 to-blue-100 
+        dark:bg-none dark:bg-dark-bg dark:border dark:border-dark-border 
+        p-4 rounded-lg
+    ">
                         <div className="flex items-center gap-3">
-                            <Users className="w-8 h-8 text-blue-600" />
+                            <Users className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                             <div>
-                                <p className="text-sm text-blue-600 font-medium">Total</p>
-                                <p className="text-2xl font-bold text-blue-900">{users.length}</p>
+                                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Total</p>
+                                <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">{users.length}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+
+                    {/* Card 2: Ativos */}
+                    <div className="
+        bg-gradient-to-br from-green-50 to-green-100 
+        dark:bg-none dark:bg-dark-bg dark:border dark:border-dark-border 
+        p-4 rounded-lg
+    ">
                         <div className="flex items-center gap-3">
-                            <Users className="w-8 h-8 text-green-600" />
+                            <Users className="w-8 h-8 text-green-600 dark:text-green-400" />
                             <div>
-                                <p className="text-sm text-green-600 font-medium">Ativos</p>
-                                <p className="text-2xl font-bold text-green-900">
+                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">Ativos</p>
+                                <p className="text-2xl font-bold text-green-900 dark:text-green-200">
                                     {users.filter(u => u.status === 'active').length}
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg">
+
+                    {/* Card 3: Admins */}
+                    <div className="
+        bg-gradient-to-br from-red-50 to-red-100 
+        dark:bg-none dark:bg-dark-bg dark:border dark:border-dark-border 
+        p-4 rounded-lg
+    ">
                         <div className="flex items-center gap-3">
-                            <Shield className="w-8 h-8 text-red-600" />
+                            <Shield className="w-8 h-8 text-red-600 dark:text-red-400" />
                             <div>
-                                <p className="text-sm text-red-600 font-medium">Admins</p>
-                                <p className="text-2xl font-bold text-red-900">
+                                <p className="text-sm text-red-600 dark:text-red-400 font-medium">Admins</p>
+                                <p className="text-2xl font-bold text-red-900 dark:text-red-200">
                                     {users.filter(u => u.adm).length}
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+
+                    {/* Card 4: Usuários */}
+                    <div className="
+        bg-gradient-to-br from-purple-50 to-purple-100 
+        dark:bg-none dark:bg-dark-bg dark:border dark:border-dark-border 
+        p-4 rounded-lg
+    ">
                         <div className="flex items-center gap-3">
-                            <Users className="w-8 h-8 text-purple-600" />
+                            <Users className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                             <div>
-                                <p className="text-sm text-purple-600 font-medium">Usuários</p>
-                                <p className="text-2xl font-bold text-purple-900">
+                                <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Usuários</p>
+                                <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">
                                     {users.filter(u => !u.adm).length}
                                 </p>
                             </div>
@@ -280,24 +305,25 @@ export default function UsuariosPage() {
                 </div>
 
                 {/* Filtros */}
+                {/* 🎨 DARK MODE: Inputs de Filtro */}
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
-                        <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                         <input
                             type="text"
                             placeholder="Buscar por username..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                         />
                     </div>
 
                     <div className="relative min-w-[180px]">
-                        <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                         <select
                             value={filterRole}
                             onChange={(e) => setFilterRole(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all appearance-none bg-white"
+                            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all appearance-none"
                         >
                             <option value="all">Todas as Funções</option>
                             <option value="admin">Administrador</option>
@@ -306,11 +332,11 @@ export default function UsuariosPage() {
                     </div>
 
                     <div className="relative min-w-[180px]">
-                        <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <Filter className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all appearance-none bg-white"
+                            className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all appearance-none"
                         >
                             <option value="all">Todos os Status</option>
                             <option value="active">Ativo</option>
@@ -321,7 +347,7 @@ export default function UsuariosPage() {
 
                 {/* Erro Geral ao Carregar */}
                 {currentError && (
-                    <div className="mt-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
+                    <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-300 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" />
                         <span>Erro: {currentError}</span>
                     </div>
@@ -330,29 +356,28 @@ export default function UsuariosPage() {
 
             {/* Mensagem de Confirmação de Exclusão */}
             {userToDelete !== null && (
-                <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 rounded-r-lg flex items-start gap-3 animate-fadeIn">
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
-                        <p className="text-sm font-semibold text-red-800">Confirmar exclusão</p>
-                        <p className="text-xs text-red-700 mt-1">
+                        <p className="text-sm font-semibold text-red-800 dark:text-red-300">Confirmar exclusão</p>
+                        <p className="text-xs text-red-700 dark:text-red-400 mt-1">
                             Tem certeza que deseja excluir o usuário <strong>{users.find(u => u.id === userToDelete)?.username}</strong>? Esta ação não pode ser desfeita.
                         </p>
                         <div className="flex gap-2 mt-3">
                             <button
                                 onClick={() => confirmDeleteUser(userToDelete)}
                                 disabled={isDeleting}
-                                className={`px-3 py-1.5 text-xs rounded transition-all ${
-                                    isDeleting
-                                        ? 'bg-gray-400 text-white cursor-not-allowed'
-                                        : 'bg-red-600 text-white hover:bg-red-700'
-                                }`}
+                                className={`px-3 py-1.5 text-xs rounded transition-all ${isDeleting
+                                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                                    : 'bg-red-600 text-white hover:bg-red-700'
+                                    }`}
                             >
                                 {isDeleting ? 'Excluindo...' : 'Sim, excluir'}
                             </button>
                             <button
                                 onClick={() => setUserToDelete(null)}
                                 disabled={isDeleting}
-                                className="px-3 py-1.5 text-xs border border-red-600 text-red-700 rounded hover:bg-red-50 transition-all disabled:opacity-50"
+                                className="px-3 py-1.5 text-xs border border-red-600 dark:border-red-500 text-red-700 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-all disabled:opacity-50"
                             >
                                 Cancelar
                             </button>
@@ -362,26 +387,30 @@ export default function UsuariosPage() {
             )}
 
             {/* Tabela de Usuários */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            {/* 🎨 DARK MODE: Card da Tabela */}
+            <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg overflow-hidden">
                 {isLoadingList ? (
-                    <div className="text-center p-12 text-gray-500">
+                    <div className="text-center p-12 text-gray-500 dark:text-dark-text-secondary">
                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
                         <p>Carregando usuários...</p>
                     </div>
                 ) : filteredUsers.length === 0 ? (
-                    <div className="text-center p-12 text-gray-500">
-                        <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <div className="text-center p-12 text-gray-500 dark:text-dark-text-secondary">
+                        <Users className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                         <p className="text-lg font-semibold">Nenhum usuário encontrado</p>
                         <p className="text-sm mt-2">
-                            {users.length === 0 
-                                ? 'Adicione o primeiro usuário clicando no botão acima' 
+                            {users.length === 0
+                                ? 'Adicione o primeiro usuário clicando no botão acima'
                                 : 'Tente ajustar os filtros de pesquisa'}
                         </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+                      <thead className="
+                                    bg-gradient-to-r from-green-600 to-green-700 text-white 
+                                    dark:bg-none dark:bg-dark-header
+                                ">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Username</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Função</th>
@@ -389,24 +418,28 @@ export default function UsuariosPage() {
                                     <th className="px-6 py-4 text-center text-sm font-semibold">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            {/* 🎨 DARK MODE: Divisor da tabela e cores de linha */}
+                            <tbody className="divide-y divide-gray-200 dark:divide-dark-border">
                                 {filteredUsers.map((user, index) => {
                                     const roleBadge = getRoleBadge(user.role);
                                     const statusBadge = getStatusBadge(user.status);
-                                    
+
                                     return (
-                                        <tr 
+                                        <tr
                                             key={user.id}
-                                            className={`hover:bg-gray-50 transition-colors ${
-                                                index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                                            }`}
+                                            className={`transition-colors ${index % 2 === 0 ? 'bg-white dark:bg-dark-surface' : 'bg-gray-50 dark:bg-dark-bg'
+                                                } hover:bg-gray-100 dark:hover:bg-dark-border`}
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-white font-semibold">
+                                                    <div className="
+                                                        w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold
+                                                        bg-gradient-to-br from-green-500 to-green-700
+                                                        dark:bg-none dark:bg-dark-header
+                                                    ">
                                                         {user.username.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <span className="font-medium text-gray-800">{user.username}</span>
+                                                    <span className="font-medium text-gray-800 dark:text-dark-text-primary">{user.username}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -425,7 +458,7 @@ export default function UsuariosPage() {
                                                     <button
                                                         onClick={() => setUserToDelete(user.id)}
                                                         disabled={isDeleting}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                                                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all disabled:opacity-50"
                                                         title="Remover usuário"
                                                     >
                                                         <Trash2 className="w-4 h-4" />

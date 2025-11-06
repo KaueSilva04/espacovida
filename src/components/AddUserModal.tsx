@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { User, Lock, Eye, EyeOff, AlertCircle, CheckCircle, HelpCircle, Shield, Save, X } from 'lucide-react';
-import ModalComponent from './Modal';
+import ModalComponent from './Modal'; // Seu componente de modal já com dark mode
 
 interface NewUser {
     username: string;
@@ -26,6 +26,12 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
         answer: '',
         isAdmin: false
     });
+
+    // ... (O restante dos seus hooks e funções permanece o mesmo) ...
+    // [isSaving, showPassword, showConfirmPassword, errors, passwordStrength]
+    // [securityQuestions, validateUsername, validatePasswordStrength, handlePasswordChange]
+    // [validateForm, handleSubmit, handleClose, getPasswordStrengthColor, getPasswordStrengthWidth]
+    // ... (Vou omitir a lógica interna que não muda para focar no JSX) ...
 
     const [isSaving, setIsSaving] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -110,7 +116,7 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
     const handleSubmit = async () => {
         console.log('=== Modal - SUBMIT ===');
         console.log('FormData:', formData);
-        
+
         if (!validateForm()) {
             console.log('Modal - Validação falhou');
             return;
@@ -152,7 +158,7 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
             case 'weak': return 'bg-red-500';
             case 'medium': return 'bg-yellow-500';
             case 'strong': return 'bg-green-500';
-            default: return 'bg-gray-300';
+            default: return 'bg-gray-300 dark:bg-dark-border'; // 🎨 DARK MODE
         }
     };
 
@@ -174,11 +180,33 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
             width="550px"
             height=""
         >
-            <div className="p-6">
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4 max-h-[500px] overflow-y-auto pr-4">
+
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2
+                scrollbar-thin
+                scrollbar-track-transparent
+                scrollbar-thumb-rounded-full
+                scrollbar-thumb-gray-300
+                hover:scrollbar-thumb-gray-400
+                active:scrollbar-thumb-green-500
+                dark:scrollbar-thumb-dark-border
+                dark:hover:scrollbar-thumb-dark-text-secondary
+                dark:active:scrollbar-thumb-green-600 ">
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4 max-h-[500px] overflow-y-auto pr-2
+                    scrollbar-thin
+                    scrollbar-track-transparent
+                    scrollbar-thumb-rounded-full
+                    scrollbar-thumb-gray-300
+                    hover:scrollbar-thumb-gray-400
+                    active:scrollbar-thumb-green-500
+                    dark:scrollbar-thumb-dark-border
+                    dark:hover:scrollbar-thumb-dark-text-secondary
+                    dark:active:scrollbar-thumb-green-600
+               "
+                >
                     {/* Username */}
                     <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        {/* 🎨 DARK MODE: Cor do texto do label */}
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
                             <User className="w-4 h-4 text-green-600" />
                             Username *
                         </label>
@@ -186,11 +214,13 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                             type="text"
                             value={formData.username}
                             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg transition-all focus:outline-none ${
-                                errors.username 
-                                    ? 'border-red-500 focus:border-red-500' 
-                                    : 'border-gray-300 focus:border-green-600'
-                            }`}
+                            /* 🎨 DARK MODE: Cor de fundo, borda, texto e placeholder do input */
+                            className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg transition-all focus:outline-none 
+                                bg-white dark:bg-dark-bg dark:text-dark-text-primary dark:placeholder-gray-400
+                                ${errors.username
+                                    ? 'border-red-500 focus:border-red-500'
+                                    : 'border-gray-300 dark:border-dark-border focus:border-green-600'
+                                }`}
                             placeholder="Digite o username (3-20 caracteres)"
                         />
                         {errors.username && (
@@ -199,14 +229,16 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                                 {errors.username}
                             </p>
                         )}
-                        <p className="mt-1 text-xs text-gray-500">
+                        {/* 🎨 DARK MODE: Cor do texto de ajuda */}
+                        <p className="mt-1 text-xs text-gray-500 dark:text-dark-text-secondary">
                             Apenas letras, números e underscore (_)
                         </p>
                     </div>
 
                     {/* Senha */}
                     <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        {/* 🎨 DARK MODE: Cor do texto do label */}
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
                             <Lock className="w-4 h-4 text-green-600" />
                             Senha *
                         </label>
@@ -215,17 +247,20 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                                 type={showPassword ? 'text' : 'password'}
                                 value={formData.password}
                                 onChange={(e) => handlePasswordChange(e.target.value)}
-                                className={`w-full px-4 py-2.5 pr-10 text-sm border-2 rounded-lg transition-all focus:outline-none ${
-                                    errors.password 
-                                        ? 'border-red-500 focus:border-red-500' 
-                                        : 'border-gray-300 focus:border-green-600'
-                                }`}
+                                /* 🎨 DARK MODE: Cor de fundo, borda, texto e placeholder do input */
+                                className={`w-full px-4 py-2.5 pr-10 text-sm border-2 rounded-lg transition-all focus:outline-none 
+                                    bg-white dark:bg-dark-bg dark:text-dark-text-primary dark:placeholder-gray-400
+                                    ${errors.password
+                                        ? 'border-red-500 focus:border-red-500'
+                                        : 'border-gray-300 dark:border-dark-border focus:border-green-600'
+                                    }`}
                                 placeholder="Mínimo 8 caracteres"
                             />
+                            {/* 🎨 DARK MODE: Cor do ícone */}
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             >
                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
@@ -236,21 +271,22 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                                 {errors.password}
                             </p>
                         )}
-                        
+
                         {formData.password && (
                             <div className="mt-2">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-gray-600">Força da senha:</span>
-                                    <span className={`text-xs font-semibold ${
-                                        passwordStrength === 'weak' ? 'text-red-600' :
-                                        passwordStrength === 'medium' ? 'text-yellow-600' :
-                                        'text-green-600'
-                                    }`}>
+                                    {/* 🎨 DARK MODE: Cor do texto */}
+                                    <span className="text-xs text-gray-600 dark:text-dark-text-secondary">Força da senha:</span>
+                                    <span className={`text-xs font-semibold ${passwordStrength === 'weak' ? 'text-red-600' :
+                                            passwordStrength === 'medium' ? 'text-yellow-600' : // Cor do 'medium' ok para dark
+                                                'text-green-600'
+                                        }`}>
                                         {passwordStrength === 'weak' ? 'Fraca' :
-                                         passwordStrength === 'medium' ? 'Média' : 'Forte'}
+                                            passwordStrength === 'medium' ? 'Média' : 'Forte'}
                                     </span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                {/* 🎨 DARK MODE: Fundo da barra */}
+                                <div className="w-full bg-gray-200 dark:bg-dark-border rounded-full h-2">
                                     <div className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()} ${getPasswordStrengthWidth()}`}></div>
                                 </div>
                             </div>
@@ -259,7 +295,8 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
 
                     {/* Confirmar Senha */}
                     <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        {/* 🎨 DARK MODE: Cor do texto do label */}
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
                             <Lock className="w-4 h-4 text-green-600" />
                             Confirmar Senha *
                         </label>
@@ -268,17 +305,20 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 value={formData.confirmPassword}
                                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                className={`w-full px-4 py-2.5 pr-10 text-sm border-2 rounded-lg transition-all focus:outline-none ${
-                                    errors.confirmPassword 
-                                        ? 'border-red-500 focus:border-red-500' 
-                                        : 'border-gray-300 focus:border-green-600'
-                                }`}
+                                /* 🎨 DARK MODE: Cor de fundo, borda, texto e placeholder do input */
+                                className={`w-full px-4 py-2.5 pr-10 text-sm border-2 rounded-lg transition-all focus:outline-none 
+                                    bg-white dark:bg-dark-bg dark:text-dark-text-primary dark:placeholder-gray-400
+                                    ${errors.confirmPassword
+                                        ? 'border-red-500 focus:border-red-500'
+                                        : 'border-gray-300 dark:border-dark-border focus:border-green-600'
+                                    }`}
                                 placeholder="Digite a senha novamente"
                             />
+                            {/* 🎨 DARK MODE: Cor do ícone */}
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             >
                                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
@@ -299,18 +339,21 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
 
                     {/* Pergunta de Segurança */}
                     <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        {/* 🎨 DARK MODE: Cor do texto do label */}
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
                             <HelpCircle className="w-4 h-4 text-green-600" />
                             Pergunta de Segurança *
                         </label>
                         <select
                             value={formData.question}
                             onChange={(e) => setFormData({ ...formData, question: e.target.value })}
-                            className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg transition-all focus:outline-none bg-white ${
-                                errors.question 
-                                    ? 'border-red-500 focus:border-red-500' 
-                                    : 'border-gray-300 focus:border-green-600'
-                            }`}
+                            /* 🎨 DARK MODE: Cor de fundo, borda e texto do select */
+                            className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg transition-all focus:outline-none 
+                                bg-white dark:bg-dark-bg dark:text-dark-text-primary
+                                ${errors.question
+                                    ? 'border-red-500 focus:border-red-500'
+                                    : 'border-gray-300 dark:border-dark-border focus:border-green-600'
+                                }`}
                         >
                             <option value="">Selecione uma pergunta</option>
                             {securityQuestions.map((q, index) => (
@@ -327,7 +370,8 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
 
                     {/* Resposta */}
                     <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                        {/* 🎨 DARK MODE: Cor do texto do label */}
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
                             <HelpCircle className="w-4 h-4 text-green-600" />
                             Resposta *
                         </label>
@@ -335,11 +379,13 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                             type="text"
                             value={formData.answer}
                             onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
-                            className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg transition-all focus:outline-none ${
-                                errors.answer 
-                                    ? 'border-red-500 focus:border-red-500' 
-                                    : 'border-gray-300 focus:border-green-600'
-                            }`}
+                            /* 🎨 DARK MODE: Cor de fundo, borda, texto e placeholder do input */
+                            className={`w-full px-4 py-2.5 text-sm border-2 rounded-lg transition-all focus:outline-none 
+                                bg-white dark:bg-dark-bg dark:text-dark-text-primary dark:placeholder-gray-400
+                                ${errors.answer
+                                    ? 'border-red-500 focus:border-red-500'
+                                    : 'border-gray-300 dark:border-dark-border focus:border-green-600'
+                                }`}
                             placeholder="Digite sua resposta"
                         />
                         {errors.answer && (
@@ -348,27 +394,32 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                                 {errors.answer}
                             </p>
                         )}
-                        <p className="mt-1 text-xs text-gray-500">
+                        {/* 🎨 DARK MODE: Cor do texto de ajuda */}
+                        <p className="mt-1 text-xs text-gray-500 dark:text-dark-text-secondary">
                             Esta resposta será usada para recuperação de senha
                         </p>
                     </div>
 
                     {/* Checkbox Admin */}
-                    <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                    {/* 🎨 DARK MODE: Fundo e borda da caixa do admin */}
+                    <div className="bg-gray-50 dark:bg-dark-bg p-4 rounded-lg border-2 border-gray-200 dark:border-dark-border">
                         <label className="flex items-center gap-3 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={formData.isAdmin}
                                 onChange={(e) => setFormData({ ...formData, isAdmin: e.target.checked })}
-                                className="w-5 h-5 text-green-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+                                /* 🎨 DARK MODE: Borda do checkbox */
+                                className="w-5 h-5 text-green-600 border-2 border-gray-300 dark:border-dark-border rounded focus:ring-2 focus:ring-green-500 cursor-pointer
+                                           dark:bg-dark-surface" // Fundo do checkbox
                             />
                             <div className="flex items-center gap-2">
-                                <Shield className={`w-5 h-5 ${formData.isAdmin ? 'text-red-600' : 'text-gray-400'}`} />
+                                <Shield className={`w-5 h-5 ${formData.isAdmin ? 'text-red-600' : 'text-gray-400 dark:text-gray-500'}`} />
                                 <div>
-                                    <span className="text-sm font-semibold text-gray-800">
+                                    {/* 🎨 DARK MODE: Cor dos textos */}
+                                    <span className="text-sm font-semibold text-gray-800 dark:text-dark-text-primary">
                                         Administrador
                                     </span>
-                                    <p className="text-xs text-gray-600">
+                                    <p className="text-xs text-gray-600 dark:text-dark-text-secondary">
                                         Concede privilégios administrativos ao usuário
                                     </p>
                                 </div>
@@ -378,11 +429,18 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                 </form>
 
                 {/* Botões de Ação */}
-                <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
+                {/* 🎨 DARK MODE: Borda superior */}
+                <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-dark-border">
                     <button
                         onClick={handleClose}
                         disabled={isSaving}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-gray-300 text-gray-700 text-sm rounded-lg font-semibold hover:bg-gray-50 transition-all disabled:opacity-50"
+                        /* 🎨 DARK MODE: Borda, texto e hover do botão cancelar */
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 
+                                   border-gray-300 dark:border-dark-border 
+                                   text-gray-700 dark:text-dark-text-secondary 
+                                   text-sm rounded-lg font-semibold 
+                                   hover:bg-gray-50 dark:hover:bg-dark-border 
+                                   transition-all disabled:opacity-50"
                     >
                         <X className="w-4 h-4" />
                         Cancelar
@@ -390,11 +448,10 @@ export default function AddUserModal({ isOpen, onClose, onSave }: AddUserModalPr
                     <button
                         onClick={handleSubmit}
                         disabled={isSaving}
-                        className={`flex-1 flex items-center justify-center gap-2 text-white text-sm px-4 py-2.5 rounded-lg font-semibold shadow-lg transition-all ${
-                            isSaving
+                        className={`flex-1 flex items-center justify-center gap-2 text-white text-sm px-4 py-2.5 rounded-lg font-semibold shadow-lg transition-all ${isSaving
                                 ? 'bg-gray-400 cursor-not-allowed'
                                 : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                        }`}
+                            }`}
                     >
                         <Save className="w-4 h-4" />
                         {isSaving ? 'Salvando...' : 'Criar Usuário'}

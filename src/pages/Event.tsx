@@ -5,13 +5,14 @@ import Sidebar from '../components/Sidebar';
 import ProfileModal from '../components/ProfileModal';
 import UsuariosPage from '../pages/UsuariosPage';
 
+// Corrigindo os caminhos de importação (removendo .Hook)
 import { useCreateEvent } from '../hooks/eventHooks/createEvent.Hook';
 import { useDeleteEvent } from '../hooks/eventHooks/deleteEvent.Hook';
 import { useGetAllEvent } from '../hooks/eventHooks/getAllEvent.Hook';
 import { useGetAllParticipantByEvent } from '../hooks/eventHooks/getAllParticipantsByEvent.hook';
 import { useDeleteParticipant } from '../hooks/participantHooks/deleteParticipant.Hook';
 import { createEvent } from '../interfaces/eventInterfaces/createEvent.Interface';
-import { completeEvent } from '../interfaces/eventInterfaces/completeEvent.Interface'
+import { completeEvent } from '../interfaces/eventInterfaces/completeEvent.Interface';
 import { useNewParticipant } from '../hooks/participantHooks/newParticipant.Hook';
 import { newParticipant as NewParticipantInterface } from '../interfaces/participantInterfaces/newParticipant.Interface';
 import { deleteParticipantInterface } from '../interfaces/participantInterfaces/deleteParticipant.Interface';
@@ -24,12 +25,12 @@ interface EventState extends completeEvent {
     coverImageUrl?: string;
     id: number;
     title: string;
-    description: string
+    description: string;
     time: string;
     participants: completeParticipant[];
     status: 'upcoming' | 'completed' | 'cancelled' | string;
     date: string;
-    location: string
+    location: string;
 }
 
 interface EventFormState {
@@ -90,8 +91,8 @@ export default function EventManagementSystem() {
     const [showEventModal, setShowEventModal] = useState<boolean>(false);
     const [showParticipantModal, setShowParticipantModal] = useState<boolean>(false);
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-    const [showDeleteParticipantModal, setShowDeleteParticipantModal] = useState<boolean>(false)
-    const [participantIdToRemove, setParticipantIdToRemove] = useState<number>(-1)
+    const [showDeleteParticipantModal, setShowDeleteParticipantModal] = useState<boolean>(false);
+    const [participantIdToRemove, setParticipantIdToRemove] = useState<number>(-1);
     const [eventToDeleteId, setEventToDeleteId] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -324,14 +325,14 @@ export default function EventManagementSystem() {
         };
 
         try {
-            const result = deleteParticipantMutation(data)
+            const result = deleteParticipantMutation(data);
 
             if (!result) {
-                throw new Error("Erro ao excluir participante")
+                throw new Error("Erro ao excluir participante");
             }
 
             if (deleteParticipantError) {
-                throw new Error(`Erro ao excluir participante: ${deleteParticipantError}`)
+                throw new Error(`Erro ao excluir participante: ${deleteParticipantError}`);
             }
 
             const updatedEvents = events.map(event => {
@@ -343,7 +344,7 @@ export default function EventManagementSystem() {
 
             setEvents(updatedEvents);
             setSelectedEvent(prev => prev ? { ...prev, participants: prev.participants.filter(p => p.idparticipant !== participantId) } : null);
-            setShowDeleteParticipantModal(false)
+            setShowDeleteParticipantModal(false);
         } catch (e) {
             setGlobalError(addParticipantError || (e instanceof Error ? e.message : 'Um erro ocorreu ao adicionar o participante.'));
         }
@@ -382,7 +383,8 @@ export default function EventManagementSystem() {
     const showLoading = isFetching && events.length === 0;
 
     return (
-        <div className="flex min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-gray-100">
+        // Fundo principal com dark mode
+        <div className="flex min-h-screen bg-gradient-to-br  dark:bg-dark-bg">
             {/* Sidebar */}
             <Sidebar
                 currentView={currentView}
@@ -392,15 +394,16 @@ export default function EventManagementSystem() {
             />
 
             {/* Main Content */}
-            <div className="flex-1 p-6 overflow-auto">
+            <div className="flex-1 p-6 overflow-auto ">
                 {/* TELA DE EVENTOS */}
                 {currentView === 'eventos' && (
                     <div className="max-w-7xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                        {/* Card de cabeçalho com dark mode */}
+                        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg p-6 mb-6">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <div>
-                                    <h1 className="text-3xl font-bold text-gray-800 mb-2">Gerenciamento de Eventos</h1>
-                                    <p className="text-gray-600">Organize e acompanhe seus eventos e participantes</p>
+                                    <h1 className="text-3xl font-bold text-gray-800 dark:text-dark-text-primary mb-2">Gerenciamento de Eventos</h1>
+                                    <p className="text-gray-600 dark:text-dark-text-secondary">Organize e acompanhe seus eventos e participantes</p>
                                 </div>
                                 <button
                                     onClick={() => {
@@ -408,9 +411,10 @@ export default function EventManagementSystem() {
                                         setGlobalError(null);
                                     }}
                                     disabled={isCreating}
+                                    // Este botão de gradiente precisará de classes CSS globais (ex: html.dark .btn-green-gradient)
                                     className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${isCreating
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                            ? 'bg-gray-400 cursor-not-allowed'
+                                            : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
                                         }`}
                                 >
                                     <Plus className="w-5 h-5" />
@@ -420,18 +424,20 @@ export default function EventManagementSystem() {
 
                             <div className="flex flex-col md:flex-row gap-4 mt-6">
                                 <div className="flex-1 relative">
-                                    <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                    <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                                    {/* Input de busca com dark mode */}
                                     <input
                                         type="text"
                                         placeholder="Buscar eventos..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                     />
                                 </div>
 
+                                {/* Erro global com dark mode */}
                                 {currentGlobalError && (
-                                    <div className="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex-1 flex items-center gap-2">
+                                    <div className="p-3 bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 dark:border-red-600 text-red-700 dark:text-red-300 flex-1 flex items-center gap-2">
                                         <X className="w-5 h-5" />
                                         <span>Erro na Operação: {currentGlobalError}</span>
                                     </div>
@@ -439,21 +445,23 @@ export default function EventManagementSystem() {
                             </div>
                         </div>
 
+                        {/* Loading com dark mode */}
                         {showLoading && (
-                            <div className="text-center p-8 text-lg text-gray-500">
+                            <div className="text-center p-8 text-lg text-gray-500 dark:text-dark-text-secondary">
                                 <Clock className="w-6 h-6 inline mr-2 animate-spin" />
                                 Carregando eventos...
                             </div>
                         )}
 
+                        {/* Nenhum evento com dark mode */}
                         {!showLoading && events.length === 0 && !currentGlobalError ? (
-                            <div className="text-center p-8 text-gray-500">
+                            <div className="text-center p-8 text-gray-500 dark:text-dark-text-secondary">
                                 Nenhum evento encontrado.
                             </div>
                         ) : (
                             <div className="space-y-4">
                                 {filteredEvents.filter(e => new Date(e.date) >= new Date()).map(event => (
-                                    <EventComponent
+                                    <EventComponent // Este componente precisa ser atualizado internamente
                                         key={event.id}
                                         titulo={event.title}
                                         descricao={event.description}
@@ -474,13 +482,13 @@ export default function EventManagementSystem() {
                                 ))}
                                 {!showLoading &&
                                     <div className='flex justify-between h-[80px]'>
-                                        <p className='mt-auto text-slate-400'>Eventos passados</p>
-                                        <hr className='bg-slate-400 mt-auto w-[1140px] h-[2px] mb-3'></hr>
+                                        <p className='mt-auto text-slate-400 dark:text-dark-text-secondary'>Eventos passados</p>
+                                        <hr className='bg-slate-400 dark:bg-dark-border mt-auto w-[1140px] h-[2px] mb-3'></hr>
                                     </div>
                                 }
 
                                 {filteredEvents.filter(e => new Date(e.date) < new Date()).map(event => (
-                                    <EventComponent
+                                    <EventComponent // Este componente precisa ser atualizado internamente
                                         key={event.id}
                                         titulo={event.title}
                                         descricao={event.description}
@@ -506,10 +514,12 @@ export default function EventManagementSystem() {
 
 
                 {/* TELA DE USUÁRIOS */}
+                {/* Este componente precisa ser atualizado internamente */}
                 {currentView === 'usuarios' && <UsuariosPage />}
             </div>
 
             {/* Profile Modal */}
+            {/* Este componente precisa ser atualizado internamente */}
             <ProfileModal
                 isOpen={showProfileModal}
                 onClose={() => {
@@ -521,45 +531,52 @@ export default function EventManagementSystem() {
             />
 
             {/* Event Details Modal */}
+            {/* Este componente (ModalComponent) precisa ser atualizado internamente */}
             {selectedEvent && (
                 <ModalComponent Titulo={selectedEvent.title} OnClickClose={() => setSelectedEvent(null)} width='800px' height=''>
-                    <div className="p-6">
-                        <p className="text-gray-700 mb-6">{selectedEvent.description}</p>
+                    {/* Conteúdo do Modal com dark mode */}
+                    <div className="p-6 bg-white dark:bg-dark-surface">
+                        <p className="text-gray-700 dark:text-dark-text-secondary mb-6">{selectedEvent.description}</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                                <Calendar className="w-6 h-6 text-green-600" />
+                            {/* Card Data */}
+                            <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                                <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
                                 <div>
-                                    <p className="text-sm text-gray-600">Data</p>
-                                    <p className="font-semibold">{new Date(selectedEvent.date).toLocaleDateString('pt-BR')}</p>
+                                    <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Data</p>
+                                    <p className="font-semibold dark:text-dark-text-primary">{new Date(selectedEvent.date).toLocaleDateString('pt-BR')}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                                <Clock className="w-6 h-6 text-blue-600" />
+                            {/* Card Horário */}
+                            <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                                <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                                 <div>
-                                    <p className="text-sm text-gray-600">Horário</p>
-                                    <p className="font-semibold">{selectedEvent.time}</p>
+                                    <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Horário</p>
+                                    <p className="font-semibold dark:text-dark-text-primary">{selectedEvent.time}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
-                                <MapPin className="w-6 h-6 text-red-600" />
+                            {/* Card Local */}
+                            <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                                <MapPin className="w-6 h-6 text-red-600 dark:text-red-400" />
                                 <div>
-                                    <p className="text-sm text-gray-600">Local</p>
-                                    <p className="font-semibold">{selectedEvent.location}</p>
+                                    <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Local</p>
+                                    <p className="font-semibold dark:text-dark-text-primary">{selectedEvent.location}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
-                                <Users className="w-6 h-6 text-purple-600" />
+                            {/* Card Participantes */}
+                            <div className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                                 <div>
-                                    <p className="text-sm text-gray-600">Participantes</p>
-                                    <p className="font-semibold">{selectedEvent.participants.length}</p>
+                                    <p className="text-sm text-gray-600 dark:text-dark-text-secondary">Participantes</p>
+                                    <p className="font-semibold dark:text-dark-text-primary">{selectedEvent.participants.length}</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-gray-800">Lista de Participantes</h3>
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-dark-text-primary">Lista de Participantes</h3>
                             <button
                                 onClick={() => openAddParticipantModal(selectedEvent)}
+                                // Botão de gradiente
                                 className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:from-green-700 hover:to-green-800 transition-all flex items-center gap-2"
                             >
                                 <UserPlus className="w-4 h-4" />
@@ -569,26 +586,27 @@ export default function EventManagementSystem() {
 
                         <div className="space-y-3 max-h-[300px] overflow-y-auto">
                             {isGettingParticipantByEvent || isDeletingParticipant ? (
-                                <p className="text-gray-500 text-center py-8">Carregando...</p>
+                                <p className="text-gray-500 dark:text-dark-text-secondary text-center py-8">Carregando...</p>
                             ) : selectedEvent.participants.length === 0 ? (
-                                <p className="text-gray-500 text-center py-8">Nenhum participante cadastrado</p>
+                                <p className="text-gray-500 dark:text-dark-text-secondary text-center py-8">Nenhum participante cadastrado</p>
                             ) : (
                                 selectedEvent.participants.map(participant => (
+                                    // Linha do participante com dark mode
                                     <div
                                         key={participant.idparticipant}
-                                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all"
+                                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-dark-bg rounded-lg hover:bg-gray-100 dark:hover:bg-dark-border transition-all"
                                     >
                                         <div>
-                                            <p className="font-semibold text-gray-800">{participant.name}</p>
-                                            <p className="text-sm text-gray-600">{participant.email}</p>
-                                            <p className="text-sm text-gray-600">{participant.phone}</p>
+                                            <p className="font-semibold text-gray-800 dark:text-dark-text-primary">{participant.name}</p>
+                                            <p className="text-sm text-gray-600 dark:text-dark-text-secondary">{participant.email}</p>
+                                            <p className="text-sm text-gray-600 dark:text-dark-text-secondary">{participant.phone}</p>
                                         </div>
                                         <button
                                             onClick={() => {
-                                                setParticipantIdToRemove(participant.idparticipant)
-                                                setShowDeleteParticipantModal(true)
+                                                setParticipantIdToRemove(participant.idparticipant);
+                                                setShowDeleteParticipantModal(true);
                                             }}
-                                            className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
+                                            className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg transition-all"
                                         >
                                             <Trash2 className="w-5 h-5" />
                                         </button>
@@ -603,9 +621,9 @@ export default function EventManagementSystem() {
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
                 <ModalComponent Titulo='Confirmação de Exclusão' OnClickClose={() => setShowDeleteModal(false)} width='500px' height=''>
-                    <div className="p-6 space-y-4">
-                        <p className="text-gray-700">
-                            Tem certeza que deseja <strong className="font-bold text-red-600">excluir</strong> este evento? Esta ação não pode ser desfeita.
+                    <div className="p-6 space-y-4 bg-white dark:bg-dark-surface">
+                        <p className="text-gray-700 dark:text-dark-text-secondary">
+                            Tem certeza que deseja <strong className="font-bold text-red-600 dark:text-red-400">excluir</strong> este evento? Esta ação não pode ser desfeita.
                         </p>
 
                         <div className="flex gap-4 pt-4">
@@ -615,7 +633,7 @@ export default function EventManagementSystem() {
                                     setEventToDeleteId(null);
                                 }}
                                 disabled={isDeleting}
-                                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                                className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-dark-border text-gray-700 dark:text-dark-text-secondary rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-dark-border transition-all"
                             >
                                 Cancelar
                             </button>
@@ -623,8 +641,8 @@ export default function EventManagementSystem() {
                                 onClick={confirmDeleteEvent}
                                 disabled={isDeleting}
                                 className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isDeleting
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-red-600 hover:bg-red-700'
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-red-600 hover:bg-red-700'
                                     }`}
                             >
                                 {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
@@ -636,25 +654,25 @@ export default function EventManagementSystem() {
 
             {/* Create Event Modal */}
             {showEventModal && (
-                <ModalComponent Titulo='Criar Novo Evento' OnClickClose={() => { setShowEventModal(false); resetEventForm() }} width='800px' height=''>
-                    <div className="p-6 space-y-4">
+                <ModalComponent Titulo='Criar Novo Evento' OnClickClose={() => { setShowEventModal(false); resetEventForm(); }} width='800px' height=''>
+                    <div className="p-6 space-y-4 bg-white dark:bg-dark-surface">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Título *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">Título *</label>
                             <input
                                 type="text"
                                 value={eventForm.title}
                                 onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 placeholder="Nome do evento"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">Descrição</label>
                             <textarea
                                 value={eventForm.description}
                                 onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 rows={3}
                                 placeholder="Descrição do evento"
                             />
@@ -662,33 +680,33 @@ export default function EventManagementSystem() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Data *</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">Data *</label>
                                 <input
                                     type="date"
                                     value={eventForm.date}
                                     onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Horário *</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">Horário *</label>
                                 <input
                                     type="time"
                                     value={eventForm.time}
                                     onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })}
-                                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Local *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">Local *</label>
                             <input
                                 type="text"
                                 value={eventForm.location}
                                 onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 placeholder="Endereço do evento"
                             />
                         </div>
@@ -697,7 +715,7 @@ export default function EventManagementSystem() {
                             type="file"
                             accept="image/*"
                             onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                            className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                         />
 
                         {imageFile && (
@@ -705,7 +723,7 @@ export default function EventManagementSystem() {
                                 <img
                                     src={URL.createObjectURL(imageFile)}
                                     alt="Prévia da imagem"
-                                    className="w-full h-48 object-cover rounded-lg border border-gray-200 shadow-sm"
+                                    className="w-full h-48 object-cover rounded-lg border border-gray-200 dark:border-dark-border shadow-sm"
                                 />
                             </div>
                         )}
@@ -716,16 +734,17 @@ export default function EventManagementSystem() {
                                     setShowEventModal(false);
                                     resetEventForm();
                                 }}
-                                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                                className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-dark-border text-gray-700 dark:text-dark-text-secondary rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-dark-border transition-all"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleCreateEvent}
                                 disabled={isCreating || isUploading}
+                                // Botão de gradiente
                                 className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isCreating || isUploading
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
                                     }`}
                             >
                                 {isCreating || isUploading ? 'Enviando...' : 'Criar Evento'}
@@ -746,43 +765,43 @@ export default function EventManagementSystem() {
                     width='500px'
                     height=''
                 >
-                    <div className="p-6 space-y-4">
+                    <div className="p-6 space-y-4 bg-white dark:bg-dark-surface">
                         {addParticipantError && (
-                            <div className="p-3 bg-red-100 border-l-4 border-red-500 text-red-700 flex items-center gap-2">
+                            <div className="p-3 bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 dark:border-red-600 text-red-700 dark:text-red-300 flex items-center gap-2">
                                 <X className="w-5 h-5" />
                                 <span>Erro: {addParticipantError}</span>
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">Nome *</label>
                             <input
                                 type="text"
                                 value={participantForm.name}
                                 onChange={(e) => setParticipantForm({ ...participantForm, name: e.target.value })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 placeholder="Nome completo"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">Email *</label>
                             <input
                                 type="email"
                                 value={participantForm.email}
                                 onChange={(e) => setParticipantForm({ ...participantForm, email: e.target.value })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 placeholder="email@exemplo.com"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">Telefone</label>
                             <input
                                 type="tel"
                                 value={participantForm.phone}
                                 onChange={(e) => setParticipantForm({ ...participantForm, phone: e.target.value })}
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-600 focus:outline-none transition-all"
+                                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-border dark:bg-dark-bg dark:text-dark-text-primary rounded-lg focus:border-green-600 focus:outline-none transition-all"
                                 placeholder="(00) 00000-0000"
                             />
                         </div>
@@ -794,16 +813,17 @@ export default function EventManagementSystem() {
                                     resetParticipantForm();
                                 }}
                                 disabled={isAddingParticipant}
-                                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                                className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-dark-border text-gray-700 dark:text-dark-text-secondary rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-dark-border transition-all"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleAddParticipant}
                                 disabled={isAddingParticipant}
+                                // Botão de gradiente
                                 className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isAddingParticipant
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
                                     }`}
                             >
                                 {isAddingParticipant ? 'Adicionando...' : 'Adicionar'}
@@ -816,9 +836,9 @@ export default function EventManagementSystem() {
             {/* Delete participant */}
             {showDeleteParticipantModal && (
                 <ModalComponent Titulo='Confirmação de Exclusão' OnClickClose={() => setShowDeleteParticipantModal(false)} width='500px' height=''>
-                    <div className="p-6 space-y-4">
-                        <p className="text-gray-700">
-                            Tem certeza que deseja <strong className="font-bold text-red-600">excluir</strong> este participante? Esta ação não pode ser desfeita.
+                    <div className="p-6 space-y-4 bg-white dark:bg-dark-surface">
+                        <p className="text-gray-700 dark:text-dark-text-secondary">
+                            Tem certeza que deseja <strong className="font-bold text-red-600 dark:text-red-400">excluir</strong> este participante? Esta ação não pode ser desfeita.
                         </p>
 
                         <div className="flex gap-4 pt-4">
@@ -827,16 +847,16 @@ export default function EventManagementSystem() {
                                     setShowDeleteParticipantModal(false);
                                 }}
                                 disabled={isDeleting}
-                                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all"
+                                className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-dark-border text-gray-700 dark:text-dark-text-secondary rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-dark-border transition-all"
                             >
                                 Cancelar
                             </button>
                             <button
-                                onClick={() => { handleRemoveParticipant(participantIdToRemove) }}
+                                onClick={() => { handleRemoveParticipant(participantIdToRemove); }}
                                 disabled={isDeletingParticipant}
                                 className={`flex-1 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${isDeletingParticipant
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-red-600 hover:bg-red-700'
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-red-600 hover:bg-red-700'
                                     }`}
                             >
                                 {isDeleting ? 'Excluindo...' : 'Confirmar Exclusão'}
