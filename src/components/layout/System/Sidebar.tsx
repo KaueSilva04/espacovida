@@ -14,17 +14,15 @@ import {
 } from 'lucide-react';
 
 // Restaurando os imports que você usa
-import { useLogoutUser } from '../hooks/userHooks/logoutUser.Hook';
+import { useLogoutUser } from '../../../hooks/userHooks/logoutUser.Hook';
 import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
     currentView: 'eventos' | 'usuarios' | 'perfil';
     onViewChange: (view: 'eventos' | 'usuarios' | 'perfil') => void;
-    userName: string; // Adicionado para completar a interface da Sidebar
-    userEmail: string; // Adicionado para completar a interface da Sidebar
 }
 
-export default function Sidebar({ currentView, onViewChange, userName, userEmail }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     // Este é o estado que controla o tema

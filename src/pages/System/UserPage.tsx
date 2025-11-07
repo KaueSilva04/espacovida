@@ -174,7 +174,6 @@ export default function UsuariosPage() {
             : { class: 'bg-gray-100 text-gray-800 dark:bg-dark-border dark:text-dark-text-secondary', label: 'Inativo' };
     };
 
-    const isLoading = isLoadingList || isCreating || isDeleting;
     const currentError = fetchError || createError || deleteError;
 
     return (
@@ -492,7 +491,7 @@ export default function UsuariosPage() {
             />
 
             {/* CSS Animation */}
-            <style jsx>{`
+            <style>{`
                 @keyframes fadeIn {
                     from {
                         opacity: 0;

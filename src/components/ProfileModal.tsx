@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'; // Importando hooks do React
 import { userProfile } from '../interfaces/userInterfaces/userProfile.Interface';
 // 2. Importe o hook de carregar dados
 import { useRenderProfile } from '../hooks/userHooks/renderUserProfile.Hook';
-import ProfileData from '../interfaces/FrontendInterfaces/EventPage/ProfileData.Interface';
 
 
 interface ModalComponentProps {
@@ -56,7 +55,7 @@ function ModalComponent({
 
 interface ProfileModalProps {
     isOpen: boolean;
-    profileData: ProfileData;
+    profileData: userProfile;
     onClose: () => void;
     onSave: () => void;
 }
@@ -152,7 +151,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 <label className="text-xs font-medium text-gray-700 dark:text-dark-text-secondary mb-1">Pergunta de Segurança</label>
                                 <input
                                     type="text"
-                                    value={profileData.question}
+                                    value={profileData.quention}
                                     disabled
                                     className="w-full px-3 py-2 text-sm border-2 rounded-lg bg-gray-50 dark:bg-dark-bg dark:border-dark-border dark:text-dark-text-secondary cursor-not-allowed"
                                 />

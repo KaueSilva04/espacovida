@@ -2,10 +2,6 @@ import { useState, useEffect } from 'react';
 // Removendo ListFilter e mantendo apenas as essenciais e RotateCcw
 import { Calendar, Users, MapPin, Clock, Plus, Trash2, UserPlus, Search, X, RotateCcw } from 'lucide-react';
 import ModalComponent from '../../components/Modal';
-import Sidebar from '../../components/Sidebar';
-import HeaderContainer from '../../components/layout/HeaderSystem';
-import ProfileModal from '../../components/ProfileModal';
-import UsuariosPage from './UserPage';
 
 // Corrigindo os caminhos de importação (removendo .Hook)
 import { useCreateEvent } from '../../hooks/eventHooks/createEvent.Hook';
@@ -23,7 +19,6 @@ import completeParticipant from '../../interfaces/participantInterfaces/complete
 import EventState from '../../interfaces/FrontendInterfaces/EventPage/EventState.Interface';
 import EventFormState from '../../interfaces/FrontendInterfaces/EventPage/EventFormState.Interface';
 import ParticipantFormState from '../../interfaces/FrontendInterfaces/EventPage/ParticipantFormState.Interface';
-import ProfileData from '../../interfaces/FrontendInterfaces/EventPage/ProfileData.Interface';
 
 
 // --- Interfaces ---
@@ -46,7 +41,7 @@ const isUpcomingNextMonth = (eventDateStr: string): boolean => {
 };
 
 
-export default function EventManagementSystem() {
+export default function EventSystemPage() {
     // --- Hooks de API ---
     const { isLoading: isCreating, error: createError, createEvent: createEventMutation } = useCreateEvent();
     const { deleteEvent: deleteEventMutation, isLoading: isDeleting, error: deleteError } = useDeleteEvent();
@@ -54,49 +49,6 @@ export default function EventManagementSystem() {
     const { createParticipant: createParticipantMutation, loading: isAddingParticipant, error: addParticipantError } = useNewParticipant();
     const { getAllParticipantByEvent: getAllParticipantByEventMutation, isLoading: isGettingParticipantByEvent, error: getParticipantByEventError } = useGetAllParticipantByEvent();
     const { deleteParticipant: deleteParticipantMutation, isLoading: isDeletingParticipant, error: deleteParticipantError } = useDeleteParticipant();
-
-    // --- Estados de Navegação ---
-    const [currentView, setCurrentView] = useState<'eventos' | 'usuarios' | 'perfil'>('eventos');
-    const [showProfileModal, setShowProfileModal] = useState(false);
-
-
-
-    const getHeaderContent = () => {
-        switch (currentView) {
-            case 'eventos':
-                return {
-                    title: "Eventos",
-                    subtitle: "Estes são seus insights mais recentes",
-                };
-            case 'usuarios':
-                return {
-                    title: "Usuários", // <-- TÍTULO MUDADO AQUI
-                    subtitle: "Visualize e gerencie as contas de acesso ao sistema",
-                };
-            case 'perfil':
-                // Geralmente não aparece, mas para consistência
-                return {
-                    title: "Meu Perfil",
-                    subtitle: "Ajuste suas informações de conta",
-                };
-            default:
-                return {
-                    title: "Dashboard",
-                    subtitle: "Visão geral do sistema",
-                };
-        }
-    };
-
-    // --- Estados de Perfil ---
-    const [profileData, setProfileData] = useState<ProfileData>({
-        nome: 'João Silva',
-        email: 'joao.silva@email.com',
-        telefone: '(11) 98765-4321',
-        endereco: 'São Paulo, SP',
-        dataNascimento: '1990-01-15',
-        cargo: 'Gerente de Eventos',
-        departamento: 'Administração'
-    });
 
     // --- Estados de Eventos ---
     const [events, setEvents] = useState<EventState[]>([]);
@@ -160,32 +112,6 @@ export default function EventManagementSystem() {
             setEvents(mappedEvents);
         }
     }, [fetchedEvents]);
-
-    // --- Handlers de Navegação ---
-    const handleViewChange = (view: 'eventos' | 'usuarios' | 'perfil') => {
-        // Se clicar em 'perfil' na Sidebar, abra o modal
-        if (view === 'perfil') {
-            setShowProfileModal(true);
-            // Mantenha a view principal como 'eventos' ou 'usuarios' se você quiser que o conteúdo da página permaneça
-        } else {
-            setCurrentView(view);
-            setShowProfileModal(false); // Garante que o modal feche se mudar para outra view principal
-        }
-    };
-
-    // Handler específico para o HeaderContainer
-    const handleOpenProfileModal = () => {
-        setShowProfileModal(true);
-    };
-
-
-    const handleSaveProfile = async (data: ProfileData) => {
-        console.log('Salvando perfil:', data);
-        setProfileData(data);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    };
-
-    const headerContent = getHeaderContent(); // Chame a função para obter o conteúdo
 
     // --- Handlers de Eventos ---
     const handleCreateEvent = async () => {
@@ -430,207 +356,165 @@ export default function EventManagementSystem() {
     const showLoading = isFetching && events.length === 0;
 
     return (
-        // Fundo principal com dark mode
-        <div className="flex min-h-screen bg-gradient-to-br dark:bg-gray-800">
-            {/* Sidebar */}
-            <Sidebar
-                currentView={currentView}
-                onViewChange={handleViewChange}
-                userName={profileData.nome}
-                userEmail={profileData.email}
-            />
+        <div className="max-w-7xl mx-auto">
 
-            {/* Main Content */}
-            <div className="flex-1 p-6 overflow-auto">
-                <HeaderContainer
-                    pageTitle={headerContent.title}
-                    pageSubtitle={headerContent.subtitle}
-                    notificationCount={3}
-                    onProfileClick={handleOpenProfileModal} // Passando o handler para o Header
-                />
-                {/* TELA DE EVENTOS */}
-                {currentView === 'eventos' && (
-                    <div className="max-w-7xl mx-auto">
+            {/* Card de Filtros/Busca (Layout Atualizado) */}
+            <div className="bbg-slate-100 dark:bg-dark-surface dark:bg-opacity-80 rounded-2xl shadow-lg p-6 mb-6 ">
 
-                        {/* Card de Filtros/Busca (Layout Atualizado) */}
-                        <div className="bbg-slate-100 dark:bg-dark-surface dark:bg-opacity-80 rounded-2xl shadow-lg p-6 mb-6 ">
+                {/* --- 1. LINHA PRINCIPAL (Busca e Novo Evento) --- */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                    {/* Barra de Busca (Estilo Clean Atualizado, largura reduzida) */}
+                    <div className="relative w-full md:max-w-md">
+                        <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                        <input
+                            type="text"
+                            placeholder="Buscar eventos..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 transition-all"
+                        />
+                    </div>
 
-                            {/* --- 1. LINHA PRINCIPAL (Busca e Novo Evento) --- */}
-                            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-                                {/* Barra de Busca (Estilo Clean Atualizado, largura reduzida) */}
-                                <div className="relative w-full md:max-w-md">
-                                    <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-                                    <input
-                                        type="text"
-                                        placeholder="Buscar eventos..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 transition-all"
-                                    />
-                                </div>
+                    {/* Botão Novo Evento */}
+                    <button
+                        onClick={() => {
+                            setShowEventModal(true);
+                            setGlobalError(null);
+                        }}
+                        disabled={isCreating}
+                        className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${isCreating
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-green-600 hover:bg-green-700'
+                            }`}
+                    >
+                        <Plus className="w-5 h-5" />
+                        {isCreating ? 'Aguarde...' : 'Novo Evento'}
+                    </button>
+                </div>
+                {/* --- FIM DA LINHA 1 --- */}
 
-                                {/* Botão Novo Evento */}
-                                <button
-                                    onClick={() => {
-                                        setShowEventModal(true);
-                                        setGlobalError(null);
-                                    }}
-                                    disabled={isCreating}
-                                    className={`text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2 ${isCreating
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-green-600 hover:bg-green-700'
-                                        }`}
-                                >
-                                    <Plus className="w-5 h-5" />
-                                    {isCreating ? 'Aguarde...' : 'Novo Evento'}
-                                </button>
-                            </div>
-                            {/* --- FIM DA LINHA 1 --- */}
+                {/* --- 2. LINHA DE FILTROS (Data + Status + Reset) --- */}
+                <div className="flex flex-col md:flex-row flex-wrap items-center gap-3 mt-4">
+                    {/* Filtro de Data Início */}
+                    <div className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <span className="text-gray-700 dark:text-white text-sm">De:</span>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
+                        />
+                    </div>
 
-                            {/* --- 2. LINHA DE FILTROS (Data + Status + Reset) --- */}
-                            <div className="flex flex-col md:flex-row flex-wrap items-center gap-3 mt-4">
-                                {/* Filtro de Data Início */}
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                                    <span className="text-gray-700 dark:text-white text-sm">De:</span>
-                                    <input
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
-                                    />
-                                </div>
+                    {/* Filtro de Data Fim */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-gray-700 dark:text-white text-sm">Até:</span>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
+                        />
+                    </div>
 
-                                {/* Filtro de Data Fim */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-700 dark:text-white text-sm">Até:</span>
-                                    <input
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
-                                    />
-                                </div>
+                    {/* Filtro de Status (Dropdown) */}
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="flex items-center gap-2 px-4 py-3 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all dark:bg-gray-800"
+                    >
+                        <option value="all">Status (Todos)</option>
+                        <option value="upcoming">Próximo Mês</option>
+                        <option value="completed">Concluídos/Passados</option>
+                    </select>
 
-                                {/* Filtro de Status (Dropdown) */}
-                                <select
-                                    value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value)}
-                                    className="flex items-center gap-2 px-4 py-3 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all dark:bg-gray-800"
-                                >
-                                    <option value="all">Status (Todos)</option>
-                                    <option value="upcoming">Próximo Mês</option>
-                                    <option value="completed">Concluídos/Passados</option>
-                                </select>
+                    {/* Botão de Reset (NOVO e funcional) */}
+                    <button
+                        onClick={handleResetFilters}
+                        className="text-sm text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 md:ml-auto flex items-center gap-1 mt-2 md:mt-0"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        Resetar Filtros
+                    </button>
+                </div>
+                {/* --- FIM DA LINHA 2 --- */}
 
-                                {/* Botão de Reset (NOVO e funcional) */}
-                                <button
-                                    onClick={handleResetFilters}
-                                    className="text-sm text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 md:ml-auto flex items-center gap-1 mt-2 md:mt-0"
-                                >
-                                    <RotateCcw className="w-4 h-4" />
-                                    Resetar Filtros
-                                </button>
-                            </div>
-                            {/* --- FIM DA LINHA 2 --- */}
-
-                            {/* Erro global */}
-                            {currentGlobalError && (
-                                <div className="p-3 mt-4 bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 dark:border-red-600 text-red-700 dark:text-red-300 flex items-center gap-2">
-                                    <X className="w-5 h-5" />
-                                    <span>Erro na Operação: {currentGlobalError}</span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Loading com dark mode */}
-                        {showLoading && (
-                            <div className="text-center p-8 text-lg text-gray-500 dark:text-gray-400">
-                                <Clock className="w-6 h-6 inline mr-2 animate-spin" />
-                                Carregando eventos...
-                            </div>
-                        )}
-
-                        {/* Nenhum evento com dark mode */}
-                        {!showLoading && events.length === 0 && !currentGlobalError ? (
-                            <div className="text-center p-8 text-gray-500 dark:text-gray-400">
-                                Nenhum evento encontrado.
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {/* Eventos Futuros */}
-                                {filteredEvents.filter(e => new Date(e.date) >= new Date()).map(event => (
-                                    <EventComponent // Este componente precisa ser atualizado internamente
-                                        key={event.id}
-                                        titulo={event.title}
-                                        descricao={event.description}
-                                        data={event.date}
-                                        hora={event.time}
-                                        localizacao={event.location}
-                                        imageUrl={event.coverImageUrl || ''}
-                                        deleteFunction={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteEvent(event.id);
-                                        }}
-                                        clickFunction={() => {
-                                            setSelectedEvent(event);
-                                            handleGetAllParticipantsByEvent(event.id, event);
-                                        }}
-                                        passado={false}
-                                    />
-                                ))}
-                                {(!showLoading && filterStatus != "upcoming" && filterStatus != "completed") &&
-                                    <div className='flex justify-between h-[80px]'>
-                                        <p className='mt-auto text-gray-500 dark:text-gray-400'>Eventos passados</p>
-                                        <hr className='bg-gray-400 dark:bg-gray-600 mt-auto w-[1140px] h-[2px] mb-3'></hr>
-                                    </div>
-                                }
-
-                                {/* Eventos Passados */}
-                                {filteredEvents.filter(e => new Date(e.date) < new Date()).map(event => (
-                                    <EventComponent // Este componente precisa ser atualizado internamente
-                                        key={event.id}
-                                        titulo={event.title}
-                                        descricao={event.description}
-                                        data={event.date}
-                                        hora={event.time}
-                                        localizacao={event.location}
-                                        imageUrl={event.coverImageUrl || ''}
-                                        deleteFunction={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteEvent(event.id);
-                                        }}
-                                        clickFunction={() => {
-                                            setSelectedEvent(event);
-                                            handleGetAllParticipantsByEvent(event.id, event);
-                                        }}
-                                        passado={true}
-                                    />
-                                ))}
-                            </div>
-                        )}
+                {/* Erro global */}
+                {currentGlobalError && (
+                    <div className="p-3 mt-4 bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 dark:border-red-600 text-red-700 dark:text-red-300 flex items-center gap-2">
+                        <X className="w-5 h-5" />
+                        <span>Erro na Operação: {currentGlobalError}</span>
                     </div>
                 )}
-
-
-                {/* TELA DE USUÁRIOS */}
-                {/* Este componente precisa ser atualizado internamente */}
-                {currentView === 'usuarios' && <UsuariosPage />}
             </div>
 
-            {/* Profile Modal */}
-            {/* Este componente precisa ser atualizado internamente */}
-            <ProfileModal
-                isOpen={showProfileModal}
-                onClose={() => {
-                    setShowProfileModal(false);
-                }}
-                profileData={profileData}
-                onSave={() => {handleSaveProfile}}
-            />
+            {/* Loading com dark mode */}
+            {showLoading && (
+                <div className="text-center p-8 text-lg text-gray-500 dark:text-gray-400">
+                    <Clock className="w-6 h-6 inline mr-2 animate-spin" />
+                    Carregando eventos...
+                </div>
+            )}
 
-            {/* Event Details Modal */}
-            {/* Este componente (ModalComponent) precisa ser atualizado internamente */}
+            {/* Nenhum evento com dark mode */}
+            {!showLoading && events.length === 0 && !currentGlobalError ? (
+                <div className="text-center p-8 text-gray-500 dark:text-gray-400">
+                    Nenhum evento encontrado.
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {/* Eventos Futuros */}
+                    {filteredEvents.filter(e => new Date(e.date) >= new Date()).map(event => (
+                        <EventComponent // Este componente precisa ser atualizado internamente
+                            key={event.id}
+                            titulo={event.title}
+                            descricao={event.description}
+                            data={event.date}
+                            hora={event.time}
+                            localizacao={event.location}
+                            imageUrl={event.coverImageUrl || ''}
+                            deleteFunction={(e) => {
+                                e.stopPropagation();
+                                handleDeleteEvent(event.id);
+                            }}
+                            clickFunction={() => {
+                                setSelectedEvent(event);
+                                handleGetAllParticipantsByEvent(event.id, event);
+                            }}
+                            passado={false}
+                        />
+                    ))}
+                    {(!showLoading && filterStatus != "upcoming" && filterStatus != "completed") &&
+                        <div className='flex justify-between h-[80px]'>
+                            <p className='mt-auto text-gray-500 dark:text-gray-400'>Eventos passados</p>
+                            <hr className='bg-gray-400 dark:bg-gray-600 mt-auto w-[1140px] h-[2px] mb-3'></hr>
+                        </div>
+                    }
+
+                    {/* Eventos Passados */}
+                    {filteredEvents.filter(e => new Date(e.date) < new Date()).map(event => (
+                        <EventComponent // Este componente precisa ser atualizado internamente
+                            key={event.id}
+                            titulo={event.title}
+                            descricao={event.description}
+                            data={event.date}
+                            hora={event.time}
+                            localizacao={event.location}
+                            imageUrl={event.coverImageUrl || ''}
+                            deleteFunction={(e) => {
+                                e.stopPropagation();
+                                handleDeleteEvent(event.id);
+                            }}
+                            clickFunction={() => {
+                                setSelectedEvent(event);
+                                handleGetAllParticipantsByEvent(event.id, event);
+                            }}
+                            passado={true}
+                        />
+                    ))}
+                </div>
+            )}
             {selectedEvent && (
                 <ModalComponent Titulo={selectedEvent.title} OnClickClose={() => setSelectedEvent(null)} width='800px' height=''>
                     {/* Conteúdo do Modal com dark mode */}

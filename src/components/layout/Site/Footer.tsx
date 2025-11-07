@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import logoImage from '../../assets/logo.png';
+import logoImage from '../../../assets/logo.png';
 import { MapPinIcon, PhoneIcon, MailIcon } from 'lucide-react';
 const Footer = () => {
   return <footer className="bg-gray-light pt-12 pb-6">
