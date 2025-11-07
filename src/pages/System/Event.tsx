@@ -14,11 +14,12 @@ import { useNewParticipant } from '../../hooks/participantHooks/newParticipant.H
 import { newParticipant as NewParticipantInterface } from '../../interfaces/participantInterfaces/newParticipant.Interface';
 import { deleteParticipantInterface } from '../../interfaces/participantInterfaces/deleteParticipant.Interface';
 import { uploadImageToCloudinary } from '../../services/upload/uploadToCloudinary.Service';
-import EventComponent from '../../components/EventPageModals/EventComponent';
+import EventComponent from '../../components/EventSystemPageComponents/EventComponent';
 import completeParticipant from '../../interfaces/participantInterfaces/completeParticipant.Interface';
 import EventState from '../../interfaces/FrontendInterfaces/EventPage/EventState.Interface';
 import EventFormState from '../../interfaces/FrontendInterfaces/EventPage/EventFormState.Interface';
 import ParticipantFormState from '../../interfaces/FrontendInterfaces/EventPage/ParticipantFormState.Interface';
+import EventDetailsModal from '../../components/Modals/EventSystemPageModals/SelectedEventModal';
 
 
 // --- Interfaces ---
@@ -516,90 +517,18 @@ export default function EventSystemPage() {
                 </div>
             )}
             {selectedEvent && (
-                <ModalComponent Titulo={selectedEvent.title} OnClickClose={() => setSelectedEvent(null)} width='800px' height=''>
-                    {/* Conteúdo do Modal com dark mode */}
-                    <div className="p-6 bg-white dark:bg-gray-700">
-                        <p className="text-gray-700 dark:text-gray-300 mb-6">{selectedEvent.description}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            {/* Card Data */}
-                            <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                                <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
-                                <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Data</p>
-                                    <p className="font-semibold dark:text-white">{new Date(selectedEvent.date).toLocaleDateString('pt-BR')}</p>
-                                </div>
-                            </div>
-                            {/* Card Horário */}
-                            <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                                <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                                <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Horário</p>
-                                    <p className="font-semibold dark:text-white">{selectedEvent.time}</p>
-                                </div>
-                            </div>
-                            {/* Card Local */}
-                            <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg">
-                                <MapPin className="w-6 h-6 text-red-600 dark:text-red-400" />
-                                <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Local</p>
-                                    <p className="font-semibold dark:text-white">{selectedEvent.location}</p>
-                                </div>
-                            </div>
-                            {/* Card Participantes */}
-                            <div className="flex items-center gap-3 p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                                <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Participantes</p>
-                                    <p className="font-semibold dark:text-white">{selectedEvent.participants.length}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-gray-800 dark:text-white">Lista de Participantes</h3>
-                            <button
-                                onClick={() => openAddParticipantModal(selectedEvent)}
-                                // Botão de gradiente
-                                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:from-green-700 hover:to-green-800 transition-all flex items-center gap-2"
-                            >
-                                <UserPlus className="w-4 h-4" />
-                                Adicionar
-                            </button>
-                        </div>
-
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto">
-                            {isGettingParticipantByEvent || isDeletingParticipant ? (
-                                <p className="text-gray-500 dark:text-gray-400 text-center py-8">Carregando...</p>
-                            ) : selectedEvent.participants.length === 0 ? (
-                                <p className="text-gray-500 dark:text-gray-400 text-center py-8">Nenhum participante cadastrado</p>
-                            ) : (
-                                selectedEvent.participants.map(participant => (
-                                    // Linha do participante com dark mode
-                                    <div
-                                        key={participant.idparticipant}
-                                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all"
-                                    >
-                                        <div>
-                                            <p className="font-semibold text-gray-800 dark:text-white">{participant.name}</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-300">{participant.email}</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-300">{participant.phone}</p>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                setParticipantIdToRemove(participant.idparticipant);
-                                                setShowDeleteParticipantModal(true);
-                                            }}
-                                            className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg transition-all"
-                                        >
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </ModalComponent>
-            )}
+                <EventDetailsModal
+                    selectedEvent={selectedEvent}
+                    onClose={() => setSelectedEvent(null)}
+                    onOpenAddParticipantModal={openAddParticipantModal}
+                    onSetParticipantToRemove={setParticipantIdToRemove}
+                    onOpenDeleteParticipantModal={() => setShowDeleteParticipantModal(true)}
+                    isGettingParticipantByEvent={isGettingParticipantByEvent}
+                    isDeletingParticipant={isDeletingParticipant}
+                    // Você pode decidir se quer passar um erro específico para o modal ou o global
+                    globalError={currentGlobalError}
+                />)
+            }
 
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
