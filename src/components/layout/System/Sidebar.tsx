@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react'; 
-import { 
-    Calendar, 
-    LogOut, 
-    UserCircle, 
-    UsersRound, 
-    Menu, 
-    X, 
+import { useState, useEffect } from 'react';
+import {
+    Calendar,
+    LogOut,
+    UserCircle,
+    UsersRound,
+    Menu,
+    X,
     ChevronRight,
     Sparkles, // Adicionado para o logo "Espaço Vida"
-    HelpCircle, // Adicionado para o botão de Ajuda
+
     Sun,        // Adicionado para o seletor de tema
     Moon        // Adicionado para o seletor de tema
 } from 'lucide-react';
@@ -16,6 +16,7 @@ import {
 // Restaurando os imports que você usa
 import { useLogoutUser } from '../../../hooks/userHooks/logoutUser.Hook';
 import { useNavigate } from 'react-router-dom';
+import logo from '../../../assets/logo.png';
 
 interface SidebarProps {
     currentView: 'eventos' | 'usuarios' | 'perfil';
@@ -26,11 +27,11 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     // Este é o estado que controla o tema
-    const [theme, setTheme] = useState('light'); 
-    
+    const [theme, setTheme] = useState('light');
+
     // Esta é a função que aplica o tema ao HTML
     useEffect(() => {
-        const root = window.document.documentElement; 
+        const root = window.document.documentElement;
         if (theme === 'dark') {
             root.classList.add('dark');
         } else {
@@ -47,9 +48,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     ];
 
     // REMOVIDO o item 'perfil'. Acesso será via Header.
-    const bottomMenuItems = [
-        { id: 'ajuda', label: 'Ajuda', icon: HelpCircle },
-    ];
+
 
     const handleLogout = async () => {
         try {
@@ -129,12 +128,12 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 {/* 1. Header da Sidebar (Logo + Botão de Fechar) */}
                 <div className="p-4 flex items-center justify-between border-b border-gray-200 dark:border-dark-border h-20">
                     <div className={`flex items-center gap-3 overflow-hidden transition-all ${isOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                           <Sparkles className="w-6 h-6 text-blue-600" />
+                        <div className="p-2 bg-white rounded-full">
+                            <img src={logo} alt="Logo Espaço Vida" className="w-14 h-14 object-contain " />
                         </div>
-                        <h2 className="text-gray-800 dark:text-dark-text-primary font-bold text-xl truncate">Espaçovida</h2>
+                       
                     </div>
-                    
+
                     <button
                         onClick={() => setIsOpen(!isOpen)}
                         className="hidden lg:block p-2 hover:bg-gray-100 dark:hover:bg-dark-border rounded-lg transition-all"
@@ -147,27 +146,20 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
                 {/* 2. Conteúdo da Sidebar (Menus + Footer) */}
                 <div className="flex-1 flex flex-col justify-between overflow-y-auto">
-                    
+
                     {/* 2a. Itens de Navegação Principais */}
                     <nav className="flex-1 p-4 space-y-2">
                         {mainMenuItems.map((item) => (
-                            <NavButton 
+                            <NavButton
                                 key={item.id}
-                                item={item} 
-                                isActive={currentView === item.id} 
+                                item={item}
+                                isActive={currentView === item.id}
                             />
                         ))}
                     </nav>
 
-                    {/* 2b. Itens Inferiores (Ajuda, Logout, Tema) */}
+                    {/* 2b. Itens Inferiores ( Logout, Tema) */}
                     <div className="p-4 space-y-2 border-t border-gray-200 dark:border-dark-border">
-                        {bottomMenuItems.map((item) => (
-                             <NavButton 
-                                 key={item.id}
-                                 item={item} 
-                                 isActive={currentView === item.id && item.id === 'perfil'} 
-                             />
-                        ))}
 
                         {/* Botão de Logout */}
                         <button
@@ -185,7 +177,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                                 </span>
                             )}
                         </button>
-                        
+
                         {/* Wrapper para alinhamento do seletor de tema */}
                         <div className={`
                             w-full flex
@@ -199,26 +191,24 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                                     inline-flex items-center gap-1 transition-all
                                 `}>
                                     {/* Botão Sol (Light) */}
-                                    <button 
+                                    <button
                                         onClick={() => setTheme('light')}
-                                        className={`p-2 rounded-full transition-all ${ 
-                                            theme === 'light' 
-                                            ? 'bg-blue-600 text-white shadow'  
-                                            : 'text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border' 
-                                        }`}
+                                        className={`p-2 rounded-full transition-all ${theme === 'light'
+                                            ? 'bg-blue-600 text-white shadow'
+                                            : 'text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border'
+                                            }`}
                                         aria-label="Mudar para tema claro"
                                     >
                                         <Sun className="w-5 h-5" />
                                     </button>
-                                    
+
                                     {/* Botão Lua (Dark) */}
-                                    <button 
+                                    <button
                                         onClick={() => setTheme('dark')}
-                                        className={`p-2 rounded-full transition-all ${ 
-                                            theme === 'dark' 
-                                            ? 'bg-blue-600 text-white shadow' 
+                                        className={`p-2 rounded-full transition-all ${theme === 'dark'
+                                            ? 'bg-blue-600 text-white shadow'
                                             : 'text-gray-500 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border'
-                                        }`}
+                                            }`}
                                         aria-label="Mudar para tema escuro"
                                     >
                                         <Moon className="w-5 h-5" />
@@ -226,8 +216,8 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                                 </div>
                             ) : (
                                 // SE A SIDEBAR ESTIVER FECHADA: Mostra apenas o ícone ATIVO
-                                <div 
-                                    className="p-2 rounded-full bg-blue-600 text-white shadow" 
+                                <div
+                                    className="p-2 rounded-full bg-blue-600 text-white shadow"
                                     aria-label={`Tema atual: ${theme === 'light' ? 'claro' : 'escuro'}`}
                                 >
                                     {theme === 'light' ? (
