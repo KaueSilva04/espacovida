@@ -1,8 +1,8 @@
 // EventDetailsModal.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Users, MapPin, Clock, Trash2, UserPlus, X } from 'lucide-react';
 // Adapte o caminho abaixo para o seu componente Modal base
-import ModalComponent from '../../Modal'; 
+import ModalComponent from '../../Modal';
 // Adapte os caminhos abaixo para suas interfaces/types
 import EventState from '../../../interfaces/FrontendInterfaces/EventPage/EventState.Interface';
 
@@ -37,13 +37,15 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         onOpenDeleteParticipantModal();
     }
 
+    const [inputValue, setInputValue] = useState("")
+
     return (
         // Utilizando o ModalComponent base
         <ModalComponent Titulo={selectedEvent.title} OnClickClose={onClose} width='800px' height=''>
             {/* Conteúdo do Modal com dark mode */}
             <div className="p-6 bg-white dark:bg-gray-700">
                 <p className="text-gray-700 dark:text-gray-300 mb-6">{selectedEvent.description}</p>
-                
+
                 {/* Erro de participante (Adicionei a exibição de erro aqui, se necessário) */}
                 {globalError && (
                     <div className="p-3 mb-4 bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 dark:border-red-600 text-red-700 dark:text-red-300 flex items-center gap-2">
@@ -51,7 +53,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                         <span>{globalError}</span>
                     </div>
                 )}
-                
+
                 {/* Detalhes do Evento em Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     {/* Card Data */}
@@ -100,6 +102,15 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     </button>
                 </div>
 
+                {/* Input de Busca de Participantes */}
+                <input
+                    value={inputValue}
+                    type="text"
+                    placeholder="Buscar participante..."
+                    className="w-full px-4 py-2 mb-4 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    onChange={(e) => {setInputValue(e.target.value)}}
+                />
+
                 {/* Lista de Participantes */}
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
                     {isGettingParticipantByEvent || isDeletingParticipant ? (
@@ -107,7 +118,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     ) : selectedEvent.participants.length === 0 ? (
                         <p className="text-gray-500 dark:text-gray-400 text-center py-8">Nenhum participante cadastrado</p>
                     ) : (
-                        selectedEvent.participants.map(participant => (
+                        selectedEvent.participants.filter(p => p.name.toLowerCase().includes(inputValue.toLowerCase())).map(participant => (
                             <div
                                 key={participant.idparticipant}
                                 className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all"
