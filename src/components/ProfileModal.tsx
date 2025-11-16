@@ -22,8 +22,30 @@ function ModalComponent({
     height,
     children
 }: ModalComponentProps) {
+    // Função que fecha apenas quando clicarmos fora
+    const handleBackdropClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+            OnClickClose();
+        }
+    };
+
+    // Fecha ao pressionar ESC
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                OnClickClose();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        // Remove listener ao desmontar
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [OnClickClose]);
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-70 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-opacity-70 backdrop-blur-sm" onClick={handleBackdropClick}>
             <div
                 className="bg-white dark:bg-dark-surface rounded-lg shadow-2xl overflow-hidden flex flex-col"
                 style={{

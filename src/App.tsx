@@ -8,6 +8,7 @@ import Donate from './pages/Site/Donate';
 import Contact from './pages/Site/Contact';
 import Login from './pages/System/Login';
 import System from './pages/System/System';
+import Dashboard from './pages/System/Dashboard';
 import { ProtectedRoute } from './components/layout/System/ProtectedRoute';
 import { PublicRoute } from './components/layout/System/PublicRoute';
 
@@ -29,6 +30,7 @@ function AppContent() {
           <Route path="/contato" element={<Contact />} />
           <Route path="/login" element={<PublicRoute element={<Login />} />} />
           <Route path="/System" element={<ProtectedRoute element={<System />} />} />
+          <Route path='/Dashboard' element={<Dashboard />} />
 
           <Route
             path="*"

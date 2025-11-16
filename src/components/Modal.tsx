@@ -1,9 +1,34 @@
 import { X } from 'lucide-react';
-
+import {useEffect} from 'react'
 export default function ModalComponent({ children, Titulo, OnClickClose, width }: { children: React.ReactNode, Titulo: string, OnClickClose: () => void, width: string, height: string | undefined }) {
+
+    // Função que fecha apenas quando clicarmos fora
+    const handleBackdropClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+            OnClickClose();
+        }
+    };
+
+    // Fecha ao pressionar ESC
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                OnClickClose();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        // Remove listener ao desmontar
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [OnClickClose]);
+
+
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 ">
-            <div 
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 " onClick={handleBackdropClick} >
+            <div
                 className={`
                   bg-white dark:bg-dark-surface 
                   text-gray-900 dark:text-dark-text-primary 
@@ -30,7 +55,7 @@ export default function ModalComponent({ children, Titulo, OnClickClose, width }
                 </div>
 
                 {/* 4. A MÁGICA ACONTECE AQUI */}
-                <div 
+                <div
                     className="
                         p-4 space-y-3 overflow-y-auto /* <-- 5. Scroll aplicado SÓ no conteúdo */
 

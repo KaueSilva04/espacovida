@@ -27,10 +27,14 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     const [isOpen, setIsOpen] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     // Este é o estado que controla o tema
-    const [theme, setTheme] = useState('light');
+    const [theme, setTheme] = useState(() => {
+       
+        return localStorage.getItem("theme") || "light";
+    });
 
     // Esta é a função que aplica o tema ao HTML
     useEffect(() => {
+        localStorage.setItem("theme", theme);
         const root = window.document.documentElement;
         if (theme === 'dark') {
             root.classList.add('dark');
@@ -131,7 +135,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                         <div className="p-2 bg-white rounded-full">
                             <img src={logo} alt="Logo Espaço Vida" className="w-14 h-14 object-contain " />
                         </div>
-                       
+
                     </div>
 
                     <button
