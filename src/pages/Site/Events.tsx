@@ -73,7 +73,7 @@ const RegistrationForm = ({ event, onClose }) => {
   const { createParticipant, loading, error } = useNewParticipant();
 
   // Função de validação de email
-  const validateEmail = (email) => {
+  const validateEmail = (email: any) => {
     if (!email || email.trim() === '') {
       return 'E-mail é obrigatório';
     }
@@ -91,7 +91,7 @@ const RegistrationForm = ({ event, onClose }) => {
   };
 
   // Função de validação de telefone (formato brasileiro)
-  const validatePhone = (phone) => {
+  const validatePhone = (phone: any) => {
     if (!phone || phone.trim() === '') {
       return 'Telefone é obrigatório';
     }
@@ -111,7 +111,7 @@ const RegistrationForm = ({ event, onClose }) => {
   };
 
   // Função de validação de nome
-  const validateName = (name) => {
+  const validateName = (name: string) => {
     if (!name || name.trim() === '') {
       return 'Nome é obrigatório';
     }
@@ -128,7 +128,7 @@ const RegistrationForm = ({ event, onClose }) => {
   };
 
   // Formatar telefone enquanto digita
-  const formatPhone = (value) => {
+  const formatPhone = (value: any) => {
     const numbers = value.replace(/\D/g, '');
 
     if (numbers.length <= 10) {
@@ -143,7 +143,7 @@ const RegistrationForm = ({ event, onClose }) => {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
 
     const formattedValue = name === 'phone' ? formatPhone(value) : value;
@@ -161,7 +161,7 @@ const RegistrationForm = ({ event, onClose }) => {
     }
   };
 
-  const handleBlur = (e) => {
+  const handleBlur = (e: any) => {
     const { name, value } = e.target;
     let errorMessage = '';
 
@@ -478,7 +478,9 @@ const Events = () => {
               ) : events.length === 0 ? (
                 <p className="text-gray-500 dark:text-dark-text-secondary text-center py-8 col-span-3">Nenhum evento encontrado.</p>
               ) : (
-                events.map((event, index) => {
+                events.filter(event => new Date(event.date) > new Date()).
+                sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).
+                map((event, index) => {
                   const defaultImage = DEFAULT_IMAGES[index % DEFAULT_IMAGES.length];
                   const formattedEvent = {
                     ...event,
