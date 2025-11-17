@@ -11,14 +11,14 @@ export interface EventDistribution {
 
 export interface NextEvent {
   id: number;
-  name: string;
+  title: string;
   date: string;
   location: string;
 }
 
 export interface TopEvent {
   id: number;
-  name: string;
+  title: string;
   participants: number;
 }
 

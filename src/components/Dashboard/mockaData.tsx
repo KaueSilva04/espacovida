@@ -67,15 +67,13 @@ const mockData: MockData = {
     topEvents: [
         {
             id: 3,
-            title: "Palestra de Inovação",
+            title: "teste",
             participants: 120,
-            date: "2025-02-01"
         },
         {
             id: 4,
-            title: "Encontro de Desenvolvedores",
+            title: "teste2",
             participants: 90,
-            date: "2025-01-15"
         }
     ]
 };

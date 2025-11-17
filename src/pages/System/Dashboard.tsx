@@ -18,14 +18,23 @@ import NextEventsList from "../../components/Dashboard/Lists/NextEventsList";
 import TopEventsList from "../../components/Dashboard/Lists/TopEventsList";
 
 // Mock (pode vir de API depois)
-import mockData from "../../components/Dashboard/mockaData";
+import mockData from "../../components/Dashboard/mockaData"
+
+import { useDashboardData } from "../../hooks/dashboard.Hook";
 
 export default function Dashboard() {
-  const data: MockData = mockData;
+
+  const { data, loading } = useDashboardData();
+  console.log(data)
   const [selectedYear, setSelectedYear] = useState("2025");
 
+  if (loading || !data) {
+    return <div className="p-6 text-center text-xl">Carregando dashboard...</div>;
+  }
+
   return (
-    <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+    // Depois:
+    <div className="w-full **bg-white dark:bg-gray-800 dark:text-white text-gray-900** p-6 rounded-xl space-y-5 max-w-full overflow-hidden">
 
       {/* CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -40,6 +49,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2">
           <ParticipantsMonthlyChart
             data={data.participantsMonthly[selectedYear]}
+            years={Object.keys(data?.participantsMonthly ?? {})}
             selectedYear={selectedYear}
             onYearChange={setSelectedYear}
           />
