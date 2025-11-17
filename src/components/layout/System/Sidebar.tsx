@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import {
     Calendar,
     LogOut,
-    UserCircle,
     UsersRound,
     Menu,
     X,
     ChevronRight,
-    Sparkles, // Adicionado para o logo "Espaço Vida"
 
-    Sun,        // Adicionado para o seletor de tema
-    Moon        // Adicionado para o seletor de tema
+    Sun,
+    Moon,
+    ChartColumn,
+    Home
 } from 'lucide-react';
 
 // Restaurando os imports que você usa
@@ -19,8 +19,8 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../../assets/logo.png';
 
 interface SidebarProps {
-    currentView: 'eventos' | 'usuarios' | 'perfil';
-    onViewChange: (view: 'eventos' | 'usuarios' | 'perfil') => void;
+    currentView: 'eventos' | 'usuarios' | 'perfil' | 'dashboard';
+    onViewChange: (view: 'eventos' | 'usuarios' | 'perfil' | 'dashboard') => void;
 }
 
 export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -28,7 +28,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     // Este é o estado que controla o tema
     const [theme, setTheme] = useState(() => {
-       
+
         return localStorage.getItem("theme") || "light";
     });
 
@@ -47,6 +47,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
     const navigate = useNavigate();
 
     const mainMenuItems = [
+        { id: 'dashboard', label: 'Home', icon: Home },
         { id: 'eventos', label: 'Eventos', icon: Calendar },
         { id: 'usuarios', label: 'Usuários', icon: UsersRound },
     ];
@@ -73,7 +74,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
                     if (item.id === 'ajuda') {
                         console.log("Clicou em Ajuda");
                     } else {
-                        onViewChange(item.id as 'eventos' | 'usuarios' | 'perfil');
+                        onViewChange(item.id as 'eventos' | 'usuarios' | 'perfil' | 'dashboard');
                     }
                     setIsMobileOpen(false);
                 }}

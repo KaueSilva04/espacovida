@@ -4,9 +4,10 @@ import HeaderContainer from '../../components/layout/System/Header';
 import UsuariosPage from './UserPage';
 
 import EventSystemPage from './Event';
+import Dashboard from './Dashboard';
 
 export default function EventManagementSystem() {    // --- Estados de Navegação ---
-    const [currentView, setCurrentView] = useState<'eventos' | 'usuarios' | 'perfil'>('eventos');
+    const [currentView, setCurrentView] = useState<'eventos' | 'usuarios' | 'perfil' | 'dashboard'>('dashboard');
     const [showProfileModal, setShowProfileModal] = useState(false);
 
     const getHeaderContent = () => {
@@ -26,16 +27,16 @@ export default function EventManagementSystem() {    // --- Estados de Navegaç�
                     title: "Meu Perfil",
                     subtitle: "Ajuste suas informações de conta",
                 };
-            default:
+            case 'dashboard':
                 return {
-                    title: "Dashboard",
+                    title: "Home",
                     subtitle: "Visão geral do sistema",
                 };
         }
     };
 
     // --- Handlers de Navegação ---
-    const handleViewChange = (view: 'eventos' | 'usuarios' | 'perfil') => {
+    const handleViewChange = (view: 'eventos' | 'usuarios' | 'perfil' | 'dashboard') => {
         // Se clicar em 'perfil' na Sidebar, abra o modal
         if (view === 'perfil') {
             setShowProfileModal(true);
@@ -73,6 +74,7 @@ export default function EventManagementSystem() {    // --- Estados de Navegaç�
                 {/* TELA DE EVENTOS */}
                 {currentView === 'eventos' && <EventSystemPage></EventSystemPage>}
                 {currentView === 'usuarios' && <UsuariosPage />}
+                {currentView === 'dashboard' && <Dashboard />}
             </div>
         </div>
     );
