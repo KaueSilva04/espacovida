@@ -161,10 +161,10 @@ export default function LoginScreen() {
                     onFocus={() => setFocusedField('username')}
                     onBlur={() => setFocusedField(null)}
                     className={`w-full pl-10 pr-4 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none ${errors.username
-                        ? 'border-red-500 focus:border-red-600'
-                        : focusedField === 'username'
-                          ? 'border-green-600'
-                          : 'border-gray-300 focus:border-green-600'
+                      ? 'border-red-500 focus:border-red-600'
+                      : focusedField === 'username'
+                        ? 'border-green-600'
+                        : 'border-gray-300 focus:border-green-600'
                       }`}
                     placeholder="Digite seu usuário"
                     aria-invalid={!!errors.username}
@@ -195,10 +195,10 @@ export default function LoginScreen() {
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
                     className={`w-full pl-10 pr-12 py-3 border-2 rounded-lg transition-all duration-200 focus:outline-none ${errors.password
-                        ? 'border-red-500 focus:border-red-600'
-                        : focusedField === 'password'
-                          ? 'border-green-600'
-                          : 'border-gray-300 focus:border-green-600'
+                      ? 'border-red-500 focus:border-red-600'
+                      : focusedField === 'password'
+                        ? 'border-green-600'
+                        : 'border-gray-300 focus:border-green-600'
                       }`}
                     placeholder="Digite sua senha"
                     aria-invalid={!!errors.password}
@@ -233,7 +233,10 @@ export default function LoginScreen() {
                 </label>
                 <a
                   href="#"
-                  onClick={(e) => e.preventDefault()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/ResetPassword');
+                  }}
                   className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-all"
                 >
                   Esqueceu a senha?

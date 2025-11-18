@@ -7,13 +7,14 @@ import Events from './pages/Site/Events';
 import Donate from './pages/Site/Donate';
 import Contact from './pages/Site/Contact';
 import Login from './pages/System/Login';
+import ResetPassword from './pages/System/ResetPassword';
 import System from './pages/System/System';
 import Dashboard from './pages/System/Dashboard';
 import { ProtectedRoute } from './components/layout/System/ProtectedRoute';
 import { PublicRoute } from './components/layout/System/PublicRoute';
 
 function AppContent() {
-  const nonLayoutPages = ['/login', '/System', '/system'];
+  const nonLayoutPages = ['/login', '/System', '/system', '/resetPassword', '/ResetPassword'];
 
   const location = useLocation();
   const hideLayout = nonLayoutPages.includes(location.pathname);
@@ -29,6 +30,7 @@ function AppContent() {
           <Route path="/doe" element={<Donate />} />
           <Route path="/contato" element={<Contact />} />
           <Route path="/login" element={<PublicRoute element={<Login />} />} />
+          <Route path="/resetPassword" element={<PublicRoute element={<ResetPassword />} />} />
           <Route path="/System" element={<ProtectedRoute element={<System />} />} />
           <Route path='/Dashboard' element={<Dashboard />} />
 

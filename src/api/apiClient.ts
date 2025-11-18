@@ -54,7 +54,7 @@ async function apiFetch<T>(endpoint: string, options: ApiFetchOptions = {}): Pro
   if (!response.ok) {
     if (response.status === 401) {
       console.warn('[API] Sessão expirada - Redirecionando para login');
-      window.location.href = '/login';
+      
       throw new Error('Sessão expirada. Por favor, faça login novamente.');
     }
 

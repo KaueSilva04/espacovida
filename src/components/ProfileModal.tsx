@@ -173,7 +173,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 <label className="text-xs font-medium text-gray-700 dark:text-dark-text-secondary mb-1">Pergunta de Segurança</label>
                                 <input
                                     type="text"
-                                    value={profileData.quention}
+                                    value={profileData.question}
                                     disabled
                                     className="w-full px-3 py-2 text-sm border-2 rounded-lg bg-gray-50 dark:bg-dark-bg dark:border-dark-border dark:text-dark-text-secondary cursor-not-allowed"
                                 />

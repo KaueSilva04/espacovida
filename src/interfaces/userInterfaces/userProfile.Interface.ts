@@ -1,6 +1,6 @@
 export interface userProfile{
     username: string;
-    quention: string;
+    question: string;
     adm: boolean;
 }
 

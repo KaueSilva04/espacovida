@@ -3,6 +3,5 @@ export interface user {
     username: string;
     adm: boolean;
     question: string;
-    answer: string;
 }
 export default user
